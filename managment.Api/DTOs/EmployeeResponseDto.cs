@@ -1,4 +1,4 @@
-musing managment.Api.Entities;
+using managment.Api.Entities;
 
 namespace managment.Api.DTOs;
 
