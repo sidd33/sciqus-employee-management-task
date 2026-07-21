@@ -6,12 +6,11 @@ namespace managment.Api.Services;
 
 public class EmployeeService : IEmployeeService
 {
-    // Thread-safe dictionary to simulate in-memory database
+
     private readonly ConcurrentDictionary<Guid, Employee> _employees = new();
 
     public EmployeeService()
     {
-        // Seed initial data for testing
         var admin = new Employee
         {
             Id = Guid.Parse("11111111-1111-1111-1111-111111111111"),
@@ -93,7 +92,6 @@ public class EmployeeService : IEmployeeService
         return Task.FromResult(removed);
     }
 
-    // Private Helper method to convert Entity -> Response DTO
     private static EmployeeResponseDto MapToResponseDto(Employee emp)
     {
         return new EmployeeResponseDto(
