@@ -1,59 +1,35 @@
-using System.Collections.Concurrent;
+using managment.Api.Data;
 using managment.Api.DTOs;
 using managment.Api.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace managment.Api.Services;
 
 public class EmployeeService : IEmployeeService
 {
+    private readonly AppDbContext _context;
 
-    private readonly ConcurrentDictionary<Guid, Employee> _employees = new();
-
-    public EmployeeService()
+    // EF Core DbContext is injected automatically by ASP.NET Core DI
+    public EmployeeService(AppDbContext context)
     {
-        var admin = new Employee
-        {
-            Id = Guid.Parse("11111111-1111-1111-1111-111111111111"),
-            FirstName = "Alice",
-            LastName = "Manager",
-            Email = "alice.manager@company.com",
-            Department = "Engineering Management",
-            Role = EmployeeRole.Admin,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        var employee = new Employee
-        {
-            Id = Guid.Parse("22222222-2222-2222-2222-222222222222"),
-            FirstName = "Bob",
-            LastName = "Developer",
-            Email = "bob.dev@company.com",
-            Department = "Software Engineering",
-            Role = EmployeeRole.Employee,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        _employees.TryAdd(admin.Id, admin);
-        _employees.TryAdd(employee.Id, employee);
+        _context = context;
     }
 
-    public Task<IEnumerable<EmployeeResponseDto>> GetAllAsync()
+    public async Task<IEnumerable<EmployeeResponseDto>> GetAllAsync()
     {
-        var response = _employees.Values.Select(MapToResponseDto);
-        return Task.FromResult(response);
+        return await _context.Employees
+            .AsNoTracking() // Performance optimization for read-only queries
+            .Select(e => MapToResponseDto(e))
+            .ToListAsync();
     }
 
-    public Task<EmployeeResponseDto?> GetByIdAsync(Guid id)
+    public async Task<EmployeeResponseDto?> GetByIdAsync(Guid id)
     {
-        if (_employees.TryGetValue(id, out var employee))
-        {
-            return Task.FromResult<EmployeeResponseDto?>(MapToResponseDto(employee));
-        }
-
-        return Task.FromResult<EmployeeResponseDto?>(null);
+        var employee = await _context.Employees.FindAsync(id);
+        return employee == null ? null : MapToResponseDto(employee);
     }
 
-    public Task<EmployeeResponseDto> CreateAsync(CreateEmployeeDto dto)
+    public async Task<EmployeeResponseDto> CreateAsync(CreateEmployeeDto dto)
     {
         var newEmployee = new Employee
         {
@@ -67,15 +43,18 @@ public class EmployeeService : IEmployeeService
             CreatedAt = DateTime.UtcNow
         };
 
-        _employees.TryAdd(newEmployee.Id, newEmployee);
-        return Task.FromResult(MapToResponseDto(newEmployee));
+        _context.Employees.Add(newEmployee);
+        await _context.SaveChangesAsync();
+
+        return MapToResponseDto(newEmployee);
     }
 
-    public Task<EmployeeResponseDto?> UpdateAsync(Guid id, UpdateEmployeeDto dto)
+    public async Task<EmployeeResponseDto?> UpdateAsync(Guid id, UpdateEmployeeDto dto)
     {
-        if (!_employees.TryGetValue(id, out var existing))
+        var existing = await _context.Employees.FindAsync(id);
+        if (existing == null)
         {
-            return Task.FromResult<EmployeeResponseDto?>(null);
+            return null;
         }
 
         existing.FirstName = dto.FirstName;
@@ -83,13 +62,22 @@ public class EmployeeService : IEmployeeService
         existing.Department = dto.Department;
         existing.UpdatedAt = DateTime.UtcNow;
 
-        return Task.FromResult<EmployeeResponseDto?>(MapToResponseDto(existing));
+        await _context.SaveChangesAsync();
+
+        return MapToResponseDto(existing);
     }
 
-    public Task<bool> DeleteAsync(Guid id)
+    public async Task<bool> DeleteAsync(Guid id)
     {
-        var removed = _employees.TryRemove(id, out _);
-        return Task.FromResult(removed);
+        var employee = await _context.Employees.FindAsync(id);
+        if (employee == null)
+        {
+            return false;
+        }
+
+        _context.Employees.Remove(employee);
+        await _context.SaveChangesAsync();
+        return true;
     }
 
     private static EmployeeResponseDto MapToResponseDto(Employee emp)
