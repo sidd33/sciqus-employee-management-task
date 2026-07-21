@@ -70,3 +70,4 @@
 /Users/lavismac/Documents/sciqus-internship/groupProj/managment.Api/obj/Debug/net8.0/managment.Api.pdb
 /Users/lavismac/Documents/sciqus-internship/groupProj/managment.Api/obj/Debug/net8.0/managment.Api.genruntimeconfig.cache
 /Users/lavismac/Documents/sciqus-internship/groupProj/managment.Api/obj/Debug/net8.0/ref/managment.Api.dll
+/Users/lavismac/Documents/sciqus-internship/groupProj/managment.Api/obj/Debug/net8.0/managment.Api.sourcelink.json
