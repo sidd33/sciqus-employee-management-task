@@ -2,7 +2,7 @@
 
 This repository contains the source code for the Sciqus group project, which consists of a robust backend management API and a cross-platform mobile frontend application.
 
-## 🚀 Project Structure
+##  Project Structure
 
 The repository is divided into two main components:
 
@@ -11,7 +11,7 @@ The repository is divided into two main components:
 
 ---
 
-## 🛠️ Technologies Used
+##  Technologies Used
 
 ### Backend (`managment.Api`)
 - **Framework**: .NET 8 / ASP.NET Core Web API
@@ -26,7 +26,7 @@ The repository is divided into two main components:
 
 ---
 
-## 💻 Getting Started
+##  Getting Started
 
 ### Prerequisites
 Before you begin, ensure you have the following installed:
@@ -86,14 +86,14 @@ Before you begin, ensure you have the following installed:
 
 ---
 
-## 📝 Configuration
+##  Configuration
 
 - **Backend Configuration**: All backend configuration like database connection strings and environment variables can be found in `managment.Api/appsettings.json` and `appsettings.Development.json`.
 - **Frontend Configuration**: Make sure the frontend is pointing to your locally running API URL. Look for a `.env` file or update the base URL in the frontend's API service (`src/services/api.ts`).
 
 ---
 
-## 🤝 Contributing
+##  Contributing
 
 When contributing to this project, please ensure you:
 1. Create a new branch for your feature or bugfix (`git checkout -b feature/your-feature-name`).
