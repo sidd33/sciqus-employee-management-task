@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EmployeeManagement.DATA.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260727150629_InitialCreate")]
+    [Migration("20260727192434_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -127,6 +127,9 @@ namespace EmployeeManagement.DATA.Migrations
                         .HasColumnType("bit");
 
                     b.Property<DateTime>("JoinedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("LastAssignedTicketAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("LastName")

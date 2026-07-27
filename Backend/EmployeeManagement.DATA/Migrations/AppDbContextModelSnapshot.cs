@@ -126,6 +126,9 @@ namespace EmployeeManagement.DATA.Migrations
                     b.Property<DateTime>("JoinedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("LastAssignedTicketAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
