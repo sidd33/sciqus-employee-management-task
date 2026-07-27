@@ -1,0 +1,21 @@
+## .NET / C# GitIgnore
+
+**/[Bb]in/
+**/[Oo]bj/
+out/
+.vs/
+.vscode/
+.idea/
+
+# User-specific files
+*.user
+*.userosscache
+*.sln.docstates
+
+# Database files
+*.db
+*.sqlite
+
+# OS generated files
+.DS_Store
+Thumbs.db
