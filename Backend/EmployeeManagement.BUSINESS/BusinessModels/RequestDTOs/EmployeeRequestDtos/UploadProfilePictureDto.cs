@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,6 +10,6 @@ namespace EmployeeManagement.BUSINESS.BusinessModels.RequestDTOs.EmployeeRequest
 {
 	public class UploadProfilePictureDto
 	{
-		public IFormFile File { get; set; }
+		public IFormFile File { get; set; } = null!;
 	}
 }
