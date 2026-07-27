@@ -1,62 +1,82 @@
-# Sciqus Group Project
+# Sciqus Employee Management System
 
-This repository contains the source code for the Sciqus group project, which consists of a robust backend management API, a cross-platform mobile frontend application, and a web frontend.
+This repository contains the source code for the Sciqus group project, which consists of a robust enterprise backend API, a cross-platform mobile frontend application, and a web frontend.
 
-## 🚀 Project Structure
+## 🚀 Project Architecture (Backend)
 
-The repository is structured as a monorepo containing three main components:
+The backend has been completely refactored into a modern **N-Tier Architecture** utilizing the **Repository Pattern** to ensure clean code, separation of concerns, and high scalability:
 
-1. **`Backend`**: The backend RESTful API built with .NET 8 (ASP.NET Core). It handles data management, business logic, and serves as the core backend for the client applications.
-2. **`Mobile-Frontend`**: The mobile client application built with React Native. It provides a user-friendly interface for interacting with the management system on iOS and Android devices.
-3. **`Web-Frontend`**: The web application client built with React and Vite, providing a fast and modern web interface.
+1. **`EmployeeManagement.WebAPI` (Presentation Layer)**: Handles HTTP requests, Controllers, Swagger, and JWT Authentication configuration.
+2. **`EmployeeManagement.BUSINESS` (Business Logic Layer)**: Contains Core Services (`TokenService`, `EmployeeService`), DTOs, Business Models, and AutoMapper configurations.
+3. **`EmployeeManagement.DATA` (Data Access Layer)**: Contains Entity Framework Core, the `AppDbContext`, Generic Repositories, Migrations, and Database Seeding logic.
+4. **`EmployeeManagement.COMMON` (Shared Layer)**: Contains shared enums and global utilities.
+5. **`Mobile-Frontend`**: The mobile client application built with React Native. It provides a user-friendly interface for interacting with the management system on iOS and Android devices.
+6. **`Web-Frontend`**: The web application client built with React and Vite, providing a fast and modern web interface.
 
 ---
 
 ## 🛠️ Technologies Used
 
-### Backend (`managment.Api`)
+### Backend (`/Backend`)
 - **Framework**: .NET 8 / ASP.NET Core Web API
 - **Language**: C#
-- **ORM**: Entity Framework Core (EF Core)
+- **Database**: Microsoft SQL Server (LocalDB)
+- **ORM**: Entity Framework Core
+- **Authentication**: JWT Bearer Tokens
+- **Security**: BCrypt Password Hashing
+- **Mapping**: AutoMapper
 
-### Mobile Frontend (`Mobile-Frontend`)
+### Mobile Frontend (`/Mobile-Frontend`)
 - **Framework**: React Native
 - **Language**: TypeScript / JavaScript
 - **Platform**: iOS & Android
 
-### Web Frontend (`Web-Frontend`)
+### Web Frontend (`/Web-Frontend`)
 - **Framework**: React
 - **Build Tool**: Vite (with HMR and ESLint rules)
-- **Language**: JavaScript / TypeScript
 
 ---
 
 ## 💻 Getting Started
 
 ### Prerequisites
-Before you begin, ensure you have the following installed:
 - [Node.js](https://nodejs.org/)
 - [React Native CLI environment setup](https://reactnative.dev/docs/environment-setup)
 - [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
-- A suitable IDE (e.g., Visual Studio, VS Code, or Cursor)
+- SQL Server Express LocalDB (Installs automatically with Visual Studio on Windows)
 
-### 1. Backend Setup (`managment.Api`)
+### 1. Backend Setup
 
 1. Open a terminal and navigate to the API directory:
    ```bash
-   cd managment.Api
+   cd Backend
    ```
-2. Restore packages and update the database:
+2. Restore packages and build the project:
    ```bash
-   dotnet restore
-   dotnet ef database update
+   dotnet build
    ```
-3. Run the API:
+3. Update the database. (This will automatically connect to your Windows LocalDB and build the tables):
    ```bash
+   dotnet ef database update --project EmployeeManagement.DATA --startup-project EmployeeManagement.WebAPI
+   ```
+4. Run the API:
+   ```bash
+   cd EmployeeManagement.WebAPI
    dotnet run
    ```
 
-### 2. Mobile Frontend Setup (`Mobile-Frontend`)
+### 🔑 Testing Authentication (Seeded Data)
+The system uses **JWT Authentication**. When you run the application, the database is automatically seeded with a Super Admin. 
+
+You can test the Login endpoint (`/api/Auth/login`) using these credentials:
+- **Email:** `admin@company.com`
+- **Password:** `Admin@123`
+
+Copy the `Token` from the response and paste it into the **Authorize** lock button at the top of the Swagger UI!
+
+---
+
+### 2. Mobile Frontend Setup
 
 1. Open a new terminal and navigate to the mobile frontend directory:
    ```bash
@@ -70,15 +90,13 @@ Before you begin, ensure you have the following installed:
    - **For Android:** `npm run android`
    - **For iOS:** `npm run ios`
 
-### 3. Web Frontend Setup (`Web-Frontend`)
-
-*(Note: Ensure your web frontend folder is placed here in the root folder alongside the others)*
+### 3. Web Frontend Setup
 
 1. Navigate to the web frontend directory:
    ```bash
    cd Web-Frontend
    ```
-2. Install the necessary Node dependencies:
+2. Install dependencies:
    ```bash
    npm install
    ```
@@ -87,18 +105,12 @@ Before you begin, ensure you have the following installed:
    npm run dev
    ```
 
-#### About the Web Frontend Template
-This web template provides a minimal setup to get React working in Vite with HMR and some ESLint rules. Two official plugins are available:
-- `@vitejs/plugin-react` uses Oxc
-- `@vitejs/plugin-react-swc` uses SWC
-
-*Note: The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).*
-
 ---
 
-## 🤝 Contributing
+## 🤝 Contributing & Git Workflow
 
-When contributing to this project, please ensure you:
-1. Create a new branch for your feature or bugfix (`git checkout -b feature/your-feature-name`).
-2. Commit your changes with clear and descriptive messages.
-3. Push to your branch and open a Pull Request against the `main` branch.
+When contributing to this project, please ensure you avoid merge conflicts by following this workflow:
+1. Ensure your local `main` branch is up to date: `git pull origin main`
+2. Create a new branch for your feature: `git checkout -b feature/your-feature-name`
+3. Commit your changes with clear and descriptive messages.
+4. Push to your branch and open a Pull Request against the `main` branch.
