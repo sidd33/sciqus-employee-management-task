@@ -1,4 +1,9 @@
+using EmployeeManagement.DATA.Interfaces.IRepositories;
+using EmployeeManagement.DATA.Implementations.Repositories;
+
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
