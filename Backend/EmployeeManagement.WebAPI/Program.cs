@@ -1,7 +1,12 @@
 using EmployeeManagement.DATA.Interfaces.IRepositories;
 using EmployeeManagement.DATA.Implementations.Repositories;
+using EmployeeManagement.DATA.Contexts;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseInMemoryDatabase("EmployeeManagementDb"));
 
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 
