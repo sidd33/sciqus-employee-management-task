@@ -1,20 +1,9 @@
-<<<<<<< HEAD
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\EmployeeManagement.DATA\EmployeeManagement.DATA.csproj" />
     <ProjectReference Include="..\EmployeeManagement.COMMON\EmployeeManagement.COMMON.csproj" />
   </ItemGroup>
-
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
-
-</Project>
-=======
-﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -23,4 +12,3 @@
   </PropertyGroup>
 
 </Project>
->>>>>>> main
