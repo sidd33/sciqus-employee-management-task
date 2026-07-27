@@ -12,7 +12,7 @@ namespace EmployeeManagement.DATA.Implementations.Repositories
         {
         }
 
-        public async Task<RefreshToken> GetByTokenAsync(string token)
+        public async Task<RefreshToken?> GetByTokenAsync(string token)
         {
             return await _dbSet.SingleOrDefaultAsync(rt => rt.Token == token);
         }
