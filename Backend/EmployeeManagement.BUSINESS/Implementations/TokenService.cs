@@ -31,11 +31,11 @@ namespace EmployeeManagement.BUSINESS.Implementations
 
         public async Task<AuthResponseDto?> AuthenticateAsync(LoginRequestDto request)
         {
-            // 1. Check if it's an Employee
-            var employee = await _context.Set<EmployeeManagement.DATA.DomainModels.EmployeeDATA.Employee>()
-                .FirstOrDefaultAsync(e => e.Email == request.Email && e.PasswordHash == request.Password);
+			// 1. Check if it's an Employee
+			var employee = await _context.Set<EmployeeManagement.DATA.DomainModels.EmployeeDATA.Employee>()
+	.FirstOrDefaultAsync(e => e.Email == request.Email);
 
-            string userId = string.Empty;
+			string userId = string.Empty;
 
             if (employee != null && BCrypt.Net.BCrypt.Verify(request.Password, employee.PasswordHash))
                 {

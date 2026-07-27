@@ -1,55 +1,133 @@
-using Microsoft.EntityFrameworkCore;
-using EmployeeManagement.DATA.Interfaces.IRepositories;
-using EmployeeManagement.DATA.Implementations.Repositories;
-using EmployeeManagement.BUSINESS.Interfaces;
 using EmployeeManagement.BUSINESS.Implementations;
+using EmployeeManagement.BUSINESS.Implementations.Service;
+using EmployeeManagement.BUSINESS.Interfaces;
+using EmployeeManagement.BUSINESS.Interfaces.IService;
+using EmployeeManagement.DATA.Contexts;
+using EmployeeManagement.DATA.Implementations.Repositories;
+using EmployeeManagement.DATA.Interfaces.IRepositories;
+using EmployeeManagement.DATA.Seed;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDbContext<EmployeeManagement.DATA.Contexts.AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Controllers
+builder.Services.AddControllers();
+
+
+// Swagger
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+	options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+	{
+		Name = "Authorization",
+		Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+		Scheme = "Bearer",
+		BearerFormat = "JWT",
+		In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+		Description = "Enter JWT token like: Bearer {your token}"
+	});
+
+	options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+	{
+		{
+			new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+			{
+				Reference = new Microsoft.OpenApi.Models.OpenApiReference
+				{
+					Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+					Id = "Bearer"
+				}
+			},
+			Array.Empty<string>()
+		}
+	});
+});
+
+
+// Database - SQL Server
+builder.Services.AddDbContext<AppDbContext>(options =>
+	options.UseSqlServer(
+		builder.Configuration.GetConnectionString("DefaultConnection")
+	));
+
+// Employee Management Services
+builder.Services.AddScoped<IEmployeeService, EmployeeService>();
+builder.Services.AddScoped<IDepartmentService, DepartmentService>();
+
+
+// Auth Services
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
-// ADDED JWT AUTHENTICATION MIDDLEWARE
+// AutoMapper
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+
+// JWT Authentication
 builder.Services.AddAuthentication(options =>
 {
-    options.DefaultAuthenticateScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme;
+	options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+	options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 })
 .AddJwtBearer(options =>
 {
-    options.RequireHttpsMetadata = false;
-    options.SaveToken = true;
-    options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
-    {
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(System.Text.Encoding.ASCII.GetBytes("SuperSecretKeyForDevelopment12345!@#SuperSecretKeyForDevelopment12345!@#")),
-        ValidateIssuer = false,
-        ValidateAudience = false
-    };
+	options.RequireHttpsMetadata = false;
+	options.SaveToken = true;
+
+	options.TokenValidationParameters = new TokenValidationParameters
+	{
+		ValidateIssuerSigningKey = true,
+
+		IssuerSigningKey = new SymmetricSecurityKey(
+			Encoding.UTF8.GetBytes(
+				"SuperSecretKeyForDevelopment12345!@#SuperSecretKeyForDevelopment12345!@#"
+			)
+		),
+
+		ValidateIssuer = false,
+		ValidateAudience = false
+	};
 });
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
+
+builder.Services.AddAuthorization();
+
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+
+// ================================
+// Database Migration + Seeding
+// ================================
+using (var scope = app.Services.CreateScope())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+	var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+	await DbInitializer.SeedAsync(context);
 }
 
-// Temporarily disabled to fix "Refused to Connect" errors on localhost
+
+if (app.Environment.IsDevelopment())
+{
+	app.UseSwagger();
+	app.UseSwaggerUI();
+}
+
+
 // app.UseHttpsRedirection();
+
 
 app.UseAuthentication();
 app.UseAuthorization();
 
+
 app.MapControllers();
+
 
 app.Run();

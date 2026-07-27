@@ -1,8 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using EmployeeManagement.DATA.DomainModels.EmployeeDATA;
 
 namespace EmployeeManagement.DATA.DomainModels.DepartmentDATA
@@ -19,7 +16,12 @@ namespace EmployeeManagement.DATA.DomainModels.DepartmentDATA
 
 		public DateTime? UpdatedAt { get; set; }
 
-		public ICollection<Employee> Employees { get; set; } = new List<Employee>();
-		public ICollection<TicketDATA.Ticket> Tickets { get; set; } = new List<TicketDATA.Ticket>();
+
+		public ICollection<Employee> Employees { get; set; }
+			= new List<Employee>();
+
+
+		public ICollection<TicketDATA.Ticket> Tickets { get; set; }
+			= new List<TicketDATA.Ticket>();
 	}
 }
