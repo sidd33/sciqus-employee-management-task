@@ -1,0 +1,12 @@
+D:\Sciqus\sciqus-employee-management-task\backend\EmployeeManagement.COMMON\bin\Debug\net10.0\EmployeeManagement.COMMON.deps.json
+D:\Sciqus\sciqus-employee-management-task\backend\EmployeeManagement.COMMON\bin\Debug\net10.0\EmployeeManagement.COMMON.dll
+D:\Sciqus\sciqus-employee-management-task\backend\EmployeeManagement.COMMON\bin\Debug\net10.0\EmployeeManagement.COMMON.pdb
+D:\Sciqus\sciqus-employee-management-task\backend\EmployeeManagement.COMMON\obj\Debug\net10.0\EmployeeManagement.COMMON.GeneratedMSBuildEditorConfig.editorconfig
+D:\Sciqus\sciqus-employee-management-task\backend\EmployeeManagement.COMMON\obj\Debug\net10.0\EmployeeManagement.COMMON.AssemblyInfoInputs.cache
+D:\Sciqus\sciqus-employee-management-task\backend\EmployeeManagement.COMMON\obj\Debug\net10.0\EmployeeManagement.COMMON.AssemblyInfo.cs
+D:\Sciqus\sciqus-employee-management-task\backend\EmployeeManagement.COMMON\obj\Debug\net10.0\EmployeeManagement.COMMON.csproj.CoreCompileInputs.cache
+D:\Sciqus\sciqus-employee-management-task\backend\EmployeeManagement.COMMON\obj\Debug\net10.0\EmployeeManagement.COMMON.sourcelink.json
+D:\Sciqus\sciqus-employee-management-task\backend\EmployeeManagement.COMMON\obj\Debug\net10.0\EmployeeManagement.COMMON.dll
+D:\Sciqus\sciqus-employee-management-task\backend\EmployeeManagement.COMMON\obj\Debug\net10.0\refint\EmployeeManagement.COMMON.dll
+D:\Sciqus\sciqus-employee-management-task\backend\EmployeeManagement.COMMON\obj\Debug\net10.0\EmployeeManagement.COMMON.pdb
+D:\Sciqus\sciqus-employee-management-task\backend\EmployeeManagement.COMMON\obj\Debug\net10.0\ref\EmployeeManagement.COMMON.dll
