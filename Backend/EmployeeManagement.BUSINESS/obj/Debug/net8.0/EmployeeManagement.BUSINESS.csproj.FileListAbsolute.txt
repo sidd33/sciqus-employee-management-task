@@ -1,0 +1,12 @@
+/Users/lavismac/Documents/sciqus-internship/sciqus-employee-management-task/Backend/EmployeeManagement.BUSINESS/bin/Debug/net8.0/EmployeeManagement.BUSINESS.deps.json
+/Users/lavismac/Documents/sciqus-internship/sciqus-employee-management-task/Backend/EmployeeManagement.BUSINESS/bin/Debug/net8.0/EmployeeManagement.BUSINESS.dll
+/Users/lavismac/Documents/sciqus-internship/sciqus-employee-management-task/Backend/EmployeeManagement.BUSINESS/bin/Debug/net8.0/EmployeeManagement.BUSINESS.pdb
+/Users/lavismac/Documents/sciqus-internship/sciqus-employee-management-task/Backend/EmployeeManagement.BUSINESS/obj/Debug/net8.0/EmployeeManagement.BUSINESS.GeneratedMSBuildEditorConfig.editorconfig
+/Users/lavismac/Documents/sciqus-internship/sciqus-employee-management-task/Backend/EmployeeManagement.BUSINESS/obj/Debug/net8.0/EmployeeManagement.BUSINESS.AssemblyInfoInputs.cache
+/Users/lavismac/Documents/sciqus-internship/sciqus-employee-management-task/Backend/EmployeeManagement.BUSINESS/obj/Debug/net8.0/EmployeeManagement.BUSINESS.AssemblyInfo.cs
+/Users/lavismac/Documents/sciqus-internship/sciqus-employee-management-task/Backend/EmployeeManagement.BUSINESS/obj/Debug/net8.0/EmployeeManagement.BUSINESS.csproj.CoreCompileInputs.cache
+/Users/lavismac/Documents/sciqus-internship/sciqus-employee-management-task/Backend/EmployeeManagement.BUSINESS/obj/Debug/net8.0/EmployeeManagement.BUSINESS.sourcelink.json
+/Users/lavismac/Documents/sciqus-internship/sciqus-employee-management-task/Backend/EmployeeManagement.BUSINESS/obj/Debug/net8.0/EmployeeManagement.BUSINESS.dll
+/Users/lavismac/Documents/sciqus-internship/sciqus-employee-management-task/Backend/EmployeeManagement.BUSINESS/obj/Debug/net8.0/refint/EmployeeManagement.BUSINESS.dll
+/Users/lavismac/Documents/sciqus-internship/sciqus-employee-management-task/Backend/EmployeeManagement.BUSINESS/obj/Debug/net8.0/EmployeeManagement.BUSINESS.pdb
+/Users/lavismac/Documents/sciqus-internship/sciqus-employee-management-task/Backend/EmployeeManagement.BUSINESS/obj/Debug/net8.0/ref/EmployeeManagement.BUSINESS.dll
