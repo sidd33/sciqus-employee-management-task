@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -41,5 +41,7 @@ namespace EmployeeManagement.DATA.DomainModels.EmployeeDATA
 
 		// Navigation property
 		public Department Department { get; set; } = null!;
+		
+		public ICollection<TicketDATA.Ticket> AssignedTickets { get; set; } = new List<TicketDATA.Ticket>();
 	}
 }
