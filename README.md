@@ -6,7 +6,7 @@ This repository contains the source code for the Sciqus group project, which con
 
 The repository is structured as a monorepo containing three main components:
 
-1. **`managment.Api`**: The backend RESTful API built with .NET 8 (ASP.NET Core). It handles data management, business logic, and serves as the core backend for the client applications.
+1. **`Backend`**: The backend RESTful API built with .NET 8 (ASP.NET Core). It handles data management, business logic, and serves as the core backend for the client applications.
 2. **`Mobile-Frontend`**: The mobile client application built with React Native. It provides a user-friendly interface for interacting with the management system on iOS and Android devices.
 3. **`Web-Frontend`**: The web application client built with React and Vite, providing a fast and modern web interface.
 
