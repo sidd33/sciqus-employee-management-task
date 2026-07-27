@@ -12,7 +12,7 @@ public class Ticket
     public Customer Customer { get; set; } = null!;
 
     public Guid DepartmentId { get; set; }
-    public Guid AssignedEmployeeId { get; set; }
+    public Guid? AssignedEmployeeId { get; set; }
 
     public TicketStatus Status { get; set; } = TicketStatus.Unassigned;
 
