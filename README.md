@@ -10,6 +10,8 @@ The backend has been completely refactored into a modern **N-Tier Architecture**
 2. **`EmployeeManagement.BUSINESS` (Business Logic Layer)**: Contains Core Services (`TokenService`, `EmployeeService`), DTOs, Business Models, and AutoMapper configurations.
 3. **`EmployeeManagement.DATA` (Data Access Layer)**: Contains Entity Framework Core, the `AppDbContext`, Generic Repositories, Migrations, and Database Seeding logic.
 4. **`EmployeeManagement.COMMON` (Shared Layer)**: Contains shared enums and global utilities.
+5. **`Mobile-Frontend`**: The mobile client application built with React Native. It provides a user-friendly interface for interacting with the management system on iOS and Android devices.
+6. **`Web-Frontend`**: The web application client built with React and Vite, providing a fast and modern web interface.
 
 ---
 
