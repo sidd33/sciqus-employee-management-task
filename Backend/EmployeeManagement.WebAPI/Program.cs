@@ -2,11 +2,13 @@ using EmployeeManagement.BUSINESS.Implementations;
 using EmployeeManagement.BUSINESS.Implementations.Service;
 using EmployeeManagement.BUSINESS.Interfaces;
 using EmployeeManagement.BUSINESS.Interfaces.IService;
+using EmployeeManagement.BUSINESS.Validations.Authorization;
 using EmployeeManagement.DATA.Contexts;
 using EmployeeManagement.DATA.Implementations.Repositories;
 using EmployeeManagement.DATA.Interfaces.IRepositories;
 using EmployeeManagement.DATA.Seed;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -57,6 +59,8 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 
 builder.Services.AddScoped<ITicketService, TicketService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
+
+builder.Services.AddSingleton<IAuthorizationHandler, TicketOwnerOrAdminHandler>();
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 

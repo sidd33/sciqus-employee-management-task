@@ -1,11 +1,13 @@
 namespace EmployeeManagement.WebAPI.Controllers;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using EmployeeManagement.BUSINESS.BusinessModels.RequestDTOs.CustomerRequestDtos;
 using EmployeeManagement.BUSINESS.Interfaces.IService;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class CustomersController : ControllerBase
 {
     private readonly ICustomerService _customerService;

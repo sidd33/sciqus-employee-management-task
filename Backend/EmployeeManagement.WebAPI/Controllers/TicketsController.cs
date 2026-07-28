@@ -1,25 +1,37 @@
 namespace EmployeeManagement.WebAPI.Controllers;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using EmployeeManagement.BUSINESS.BusinessModels.RequestDTOs.TicketRequestDtos;
 using EmployeeManagement.BUSINESS.Interfaces.IService;
+using EmployeeManagement.BUSINESS.Validations.Authorization;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class TicketsController : ControllerBase
 {
     private readonly ITicketService _ticketService;
+    private readonly IAuthorizationService _authorizationService;
 
-    public TicketsController(ITicketService ticketService)
+    public TicketsController(ITicketService ticketService, IAuthorizationService authorizationService)
     {
         _ticketService = ticketService;
+        _authorizationService = authorizationService;
     }
 
     [HttpPost]
     public async Task<IActionResult> CreateTicket([FromBody] CreateTicketDto dto)
     {
-        var ticket = await _ticketService.CreateTicketAsync(dto);
-        return CreatedAtAction(nameof(GetTicketById), new { id = ticket.Id }, ticket);
+        try
+        {
+            var ticket = await _ticketService.CreateTicketAsync(dto);
+            return CreatedAtAction(nameof(GetTicketById), new { id = ticket.Id }, ticket);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpGet("{id:guid}")]
@@ -27,6 +39,10 @@ public class TicketsController : ControllerBase
     {
         var ticket = await _ticketService.GetTicketByIdAsync(id);
         if (ticket == null) return NotFound();
+
+        var authResult = await _authorizationService.AuthorizeAsync(User, ticket, new TicketOwnerOrAdminRequirement());
+        if (!authResult.Succeeded) return Forbid();
+
         return Ok(ticket);
     }
 
@@ -40,16 +56,28 @@ public class TicketsController : ControllerBase
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> UpdateTicket(Guid id, [FromBody] UpdateTicketDto dto)
     {
+        var existingTicket = await _ticketService.GetTicketByIdAsync(id);
+        if (existingTicket == null) return NotFound();
+
+        var authResult = await _authorizationService.AuthorizeAsync(User, existingTicket, new TicketOwnerOrAdminRequirement());
+        if (!authResult.Succeeded) return Forbid();
+
         var updatedTicket = await _ticketService.UpdateTicketAsync(id, dto);
-        if (updatedTicket == null) return NotFound();
         return Ok(updatedTicket);
     }
 
     [HttpPatch("{id:guid}/assign")]
     public async Task<IActionResult> AssignTicket(Guid id, [FromBody] AssignTicketDto dto)
     {
-        var assignedTicket = await _ticketService.AssignTicketAsync(id, dto);
-        if (assignedTicket == null) return NotFound();
-        return Ok(assignedTicket);
+        try
+        {
+            var assignedTicket = await _ticketService.AssignTicketAsync(id, dto);
+            if (assignedTicket == null) return NotFound();
+            return Ok(assignedTicket);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 }
