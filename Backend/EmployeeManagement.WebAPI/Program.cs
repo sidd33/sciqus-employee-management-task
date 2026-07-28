@@ -2,23 +2,21 @@ using EmployeeManagement.BUSINESS.Implementations;
 using EmployeeManagement.BUSINESS.Implementations.Service;
 using EmployeeManagement.BUSINESS.Interfaces;
 using EmployeeManagement.BUSINESS.Interfaces.IService;
+using EmployeeManagement.BUSINESS.Validations.Authorization;
 using EmployeeManagement.DATA.Contexts;
 using EmployeeManagement.DATA.Implementations.Repositories;
 using EmployeeManagement.DATA.Interfaces.IRepositories;
 using EmployeeManagement.DATA.Seed;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
-// Controllers
 builder.Services.AddControllers();
 
-
-// Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -48,28 +46,24 @@ builder.Services.AddSwaggerGen(options =>
 	});
 });
 
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-// Database - SQL Server
 builder.Services.AddDbContext<AppDbContext>(options =>
-	options.UseSqlServer(
-		builder.Configuration.GetConnectionString("DefaultConnection")
-	));
+	options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
-// Employee Management Services
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 
-
-// Auth Services
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 
+builder.Services.AddScoped<ITicketService, TicketService>();
+builder.Services.AddScoped<ICustomerService, CustomerService>();
 
-// AutoMapper
+builder.Services.AddSingleton<IAuthorizationHandler, TicketOwnerOrAdminHandler>();
+
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
-
-// JWT Authentication
 builder.Services.AddAuthentication(options =>
 {
 	options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -95,23 +89,15 @@ builder.Services.AddAuthentication(options =>
 	};
 });
 
-
 builder.Services.AddAuthorization();
-
 
 var app = builder.Build();
 
-
-// ================================
-// Database Migration + Seeding
-// ================================
 using (var scope = app.Services.CreateScope())
 {
 	var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
 	await DbInitializer.SeedAsync(context);
 }
-
 
 if (app.Environment.IsDevelopment())
 {
@@ -119,15 +105,9 @@ if (app.Environment.IsDevelopment())
 	app.UseSwaggerUI();
 }
 
-
-// app.UseHttpsRedirection();
-
-
 app.UseAuthentication();
 app.UseAuthorization();
 
-
 app.MapControllers();
-
 
 app.Run();
