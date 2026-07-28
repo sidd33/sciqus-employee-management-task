@@ -2,32 +2,21 @@ import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import api from "../../api/axios";
 import { getFriendlyErrorMessage } from "../../utils/apiErrors";
-import { getCurrentUser, isAdminOrAbove } from "../../auth/roles";
+import { getCurrentUser } from "../../auth/roles";
 import "./MyTickets.scss";
 
-const STATUS_BADGE = {
-  Unassigned: "badge--critical",
-  Assigned: "badge--warning",
-  InProgress: "badge--high-priority",
-  Completed: "badge--success",
-  Closed: "badge--inactive",
-  Reopened: "badge--warning",
-};
-
-const STATUS_LABEL = {
-  Unassigned: "Unassigned",
-  Assigned: "Assigned",
-  InProgress: "In Progress",
-  Completed: "Completed",
-  Closed: "Closed",
-  Reopened: "Reopened",
+const STATUS_CONFIG = {
+  Unassigned: { label: "Not Assigned", color: "#64748b", icon: "⊝" },
+  Assigned: { label: "Assigned", color: "#475569"},
+  InProgress: { label: "In Progress", color: "#2563eb", icon: "⊖" },
+  Completed: { label: "Resolved", color: "#16a34a", icon: "⊙" },
+  Closed: { label: "Closed", color: "#475569", icon: "🔒" },
+  Reopened: { label: "Reopened", color: "#ea580c", icon: "↺" },
 };
 
 const EMPTY_FORM = { title: "", description: "", departmentId: "" };
 
 function MyTickets() {
-  const currentUser = getCurrentUser();
-
   const [tickets, setTickets] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -39,24 +28,32 @@ function MyTickets() {
   const [saving, setSaving] = useState(false);
 
   const loadTickets = useCallback(async () => {
+    const user = getCurrentUser();
+    const userId = user?.id || user?.userId || user?._id;
+
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError("");
     try {
-      const res = await api.get(`/customers/${currentUser.id}`);
-      setTickets(res.data.tickets || []);
+      const res = await api.get(`/customers/${userId}`);
+      setTickets(res.data?.tickets || []);
     } catch (err) {
       setError(getFriendlyErrorMessage(err));
     } finally {
       setLoading(false);
     }
-  }, [currentUser.id]);
+  }, []);
 
   const loadDepartments = useCallback(async () => {
     try {
       const res = await api.get("/departments", { params: { pageNumber: 1, pageSize: 100 } });
-      setDepartments(res.data.items || []);
+      setDepartments(res.data?.items || []);
     } catch {
-      // secondary — create form just shows fewer options
+      // fallback
     }
   }, []);
 
@@ -73,10 +70,13 @@ function MyTickets() {
 
   async function handleSubmit(e) {
     e.preventDefault();
+    const user = getCurrentUser();
+    const userId = user?.id || user?.userId || user?._id;
+
     setFormError("");
     setSaving(true);
     try {
-      await api.post("/tickets", { ...form, customerId: currentUser.id });
+      await api.post("/tickets", { ...form, customerId: userId });
       setShowCreateModal(false);
       loadTickets();
     } catch (err) {
@@ -87,52 +87,115 @@ function MyTickets() {
   }
 
   return (
-    <div className="my-tickets-page">
-      <div className="my-tickets-header">
+    <div className="tickets-page">
+      {/* Header section */}
+      <div className="tickets-header">
         <div>
           <h1>My Tickets</h1>
-          <p className="my-tickets-subtitle">Track support requests you've submitted</p>
+          <p className="tickets-subtitle">
+            Showing {tickets.length} support requests submitted by you
+          </p>
         </div>
-        <button className="btn btn--primary" onClick={openCreateModal}>
+        <button className="btn btn--primary btn-new-ticket" onClick={openCreateModal}>
           + New Ticket
         </button>
       </div>
 
-      {error && <div className="my-tickets-error">{error}</div>}
+      {error && <div className="tickets-error">{error}</div>}
 
-      {loading ? (
-        <div className="my-tickets-loading">Loading your tickets...</div>
-      ) : tickets.length === 0 ? (
-        <div className="card empty-state">
-          <h3>No tickets yet</h3>
-          <p>Submit a ticket and our team will get right on it.</p>
-        </div>
-      ) : (
-        <div className="my-tickets-list">
-          {tickets.map((ticket) => (
-            <Link to={`/tickets/${ticket.id}`} key={ticket.id} className="card card--interactive my-ticket-card">
-              <div className="my-ticket-card-header">
-                <h3>{ticket.title}</h3>
-                <span className={`badge ${STATUS_BADGE[ticket.status] || "badge--inactive"}`}>
-                  {STATUS_LABEL[ticket.status] || ticket.status}
-                </span>
-              </div>
-              <p className="my-ticket-description">{ticket.description}</p>
-              <div className="my-ticket-card-footer">
-                <span>{new Date(ticket.createdAt).toLocaleDateString()}</span>
-                {ticket.isSlaBreached && <span className="badge badge--critical">SLA Breached</span>}
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
+      {/* Main Table Container */}
+      <div className="tickets-table-card">
+        {loading ? (
+          <div className="tickets-loading">Loading tickets...</div>
+        ) : tickets.length === 0 ? (
+          <div className="empty-state">
+            <h3>No tickets found</h3>
+            <p>Submit a ticket and our team will handle it.</p>
+          </div>
+        ) : (
+          <div className="table-responsive">
+            <table className="tickets-table">
+              <thead>
+                <tr>
+                  <th>Ticket Info</th>
+                  <th>Status</th>
+                  <th>SLA Health</th>
+                  <th className="text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tickets.map((ticket) => {
+                  const statusInfo = STATUS_CONFIG[ticket.status] || {
+                    label: ticket.status,
+                    color: "#475569",
+                    icon: "•",
+                  };
+                  const shortId = `TKT-${ticket.id.slice(0, 4).toUpperCase()}`;
 
+                  return (
+                    <tr key={ticket.id}>
+                      {/* Ticket Info */}
+                      <td>
+                        <div className="ticket-info-cell">
+                          <span className="ticket-id">{shortId}</span>
+                          <Link to={`/tickets/${ticket.id}`} className="ticket-title">
+                            {ticket.title || "Untitled Ticket"}
+                          </Link>
+                          <span className="ticket-meta">
+                            Created {new Date(ticket.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Status */}
+                      <td>
+                        <div className="status-cell" style={{ color: statusInfo.color }}>
+                          <span className="status-icon">{statusInfo.icon}</span>
+                          <span className="status-label">{statusInfo.label}</span>
+                        </div>
+                      </td>
+
+                      {/* SLA Health */}
+                      <td>
+                        <div className="sla-cell">
+                          {ticket.isSlaBreached ? (
+                            <span className="sla-status sla-breached">⏰ Overdue</span>
+                          ) : (
+                            <span className="sla-status sla-ok">✓ Within SLA</span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Actions */}
+                      <td className="text-right">
+                        <div className="actions-cell">
+                          <Link
+                            to={`/tickets/${ticket.id}`}
+                            className="action-icon"
+                            title="View Ticket"
+                          >
+                            👁
+                          </Link>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Modal Dialog */}
       {showCreateModal && (
         <div className="modal-backdrop" onClick={() => setShowCreateModal(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>New Ticket</h2>
-              <button className="modal-close" onClick={() => setShowCreateModal(false)}>×</button>
+              <button className="modal-close" onClick={() => setShowCreateModal(false)}>
+                ×
+              </button>
             </div>
             <form onSubmit={handleSubmit}>
               <div className="modal-body">
@@ -163,13 +226,21 @@ function MyTickets() {
                   >
                     <option value="">Select department</option>
                     {departments.map((d) => (
-                      <option key={d.id} value={d.id}>{d.name}</option>
+                      <option key={d.id} value={d.id}>
+                        {d.name}
+                      </option>
                     ))}
                   </select>
                 </div>
               </div>
               <div className="modal-footer">
-                <button type="button" className="btn btn--secondary" onClick={() => setShowCreateModal(false)}>Cancel</button>
+                <button
+                  type="button"
+                  className="btn btn--secondary"
+                  onClick={() => setShowCreateModal(false)}
+                >
+                  Cancel
+                </button>
                 <button type="submit" className="btn btn--primary" disabled={saving}>
                   {saving ? "Submitting..." : "Submit Ticket"}
                 </button>
