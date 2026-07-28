@@ -61,7 +61,7 @@ var defaultConnection = builder.Configuration.GetConnectionString("DefaultConnec
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    options.UseSqlServer(defaultConnection, sqlOptions => sqlOptions.CommandTimeout(120));
+    options.UseMySql(defaultConnection, new MySqlServerVersion(new Version(8, 0, 32)), mySqlOptions => mySqlOptions.CommandTimeout(120));
 });
 
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
