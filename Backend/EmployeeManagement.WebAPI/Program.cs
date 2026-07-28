@@ -1,4 +1,6 @@
+using EmployeeManagement.BUSINESS.Implementations;
 using EmployeeManagement.BUSINESS.Implementations.Service;
+using EmployeeManagement.BUSINESS.Interfaces;
 using EmployeeManagement.BUSINESS.Interfaces.IService;
 using EmployeeManagement.DATA.Contexts;
 using EmployeeManagement.DATA.Implementations.Repositories;
@@ -42,10 +44,10 @@ builder.Services.AddSwaggerGen(options =>
 	});
 });
 
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
 builder.Services.AddDbContext<AppDbContext>(options =>
-	options.UseSqlServer(
-		builder.Configuration.GetConnectionString("DefaultConnection")
-	));
+	options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();

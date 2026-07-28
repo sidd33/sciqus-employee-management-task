@@ -5,6 +5,7 @@ using EmployeeManagement.BUSINESS.BusinessModels.RequestDTOs.TicketRequestDtos;
 using EmployeeManagement.BUSINESS.BusinessModels.ResponseDTOs.TicketResponseDtos;
 using EmployeeManagement.BUSINESS.Interfaces.IService;
 using EmployeeManagement.DATA.Contexts;
+using EmployeeManagement.DATA.DomainModels.EmployeeDATA;
 using EmployeeManagement.DATA.DomainModels.TicketDATA;
 
 public class TicketService : ITicketService
@@ -16,23 +17,56 @@ public class TicketService : ITicketService
         _context = context;
     }
 
-    public async Task<Ticket> CreateTicketAsync(CreateTicketDto dto)
+    public async Task<TicketResponseDto> CreateTicketAsync(CreateTicketDto dto)
     {
+        var assignedEmployee = await _context.Employees
+            .Where(e => e.DepartmentId == dto.DepartmentId 
+                     && e.IsActive 
+                     && !e.IsDeleted 
+                     && e.Role != EmployeeRole.Admin)
+            .OrderBy(e => e.LastAssignedTicketAt.HasValue)
+            .ThenBy(e => e.LastAssignedTicketAt)
+            .FirstOrDefaultAsync();
+
+        if (assignedEmployee == null)
+        {
+            throw new InvalidOperationException("No active non-admin employees available in this department to assign the ticket.");
+        }
+
+        var customer = await _context.Customers.FirstOrDefaultAsync(c => c.Id == dto.CustomerId);
+
         var ticket = new Ticket
         {
             Title = dto.Title,
             Description = dto.Description,
             CustomerId = dto.CustomerId,
             DepartmentId = dto.DepartmentId,
-            Status = TicketStatus.Unassigned,
-            AssignedEmployeeId = null,
+            AssignedEmployeeId = assignedEmployee.Id,
+            Status = TicketStatus.Assigned,
             SlaStartTime = DateTime.UtcNow.AddHours(4),
             CreatedAt = DateTime.UtcNow
         };
 
+        assignedEmployee.LastAssignedTicketAt = DateTime.UtcNow;
+
         _context.Tickets.Add(ticket);
         await _context.SaveChangesAsync();
-        return ticket;
+
+        return new TicketResponseDto
+        {
+            Id = ticket.Id,
+            Title = ticket.Title,
+            Description = ticket.Description,
+            Status = ticket.Status.ToString(),
+            CustomerId = ticket.CustomerId,
+            CustomerName = customer?.Name ?? string.Empty,
+            CustomerEmail = customer?.Email ?? string.Empty,
+            AssignedEmployeeId = ticket.AssignedEmployeeId,
+            DepartmentId = ticket.DepartmentId,
+            CreatedAt = ticket.CreatedAt,
+            SlaStartTime = ticket.SlaStartTime,
+            IsSlaBreached = ticket.IsSlaBreached
+        };
     }
 
     public async Task<TicketResponseDto?> GetTicketByIdAsync(Guid id)

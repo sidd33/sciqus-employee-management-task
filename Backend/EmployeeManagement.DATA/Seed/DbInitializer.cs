@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-
-
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -15,30 +12,18 @@ namespace EmployeeManagement.DATA.Seed
 {
 	public static class DbInitializer
 	{
-		// =====================================================
-		// SEED DATABASE
-		//
-		// Called once at startup (from Program.cs) after
-		// applying migrations. Safe to call every run —
-		// each block checks whether data already exists
-		// before inserting anything.
-		// =====================================================
 		public static async Task SeedAsync(AppDbContext context)
 		{
-			// Make sure all pending migrations are applied
-			// before seeding. Safe no-op if already up to date.
 			await context.Database.MigrateAsync();
 
 			await SeedDepartmentsAsync(context);
 			await SeedEmployeesAsync(context);
+			await SeedCustomersAsync(context);
+			await SeedTicketsAsync(context);
 		}
 
-		// =====================================================
-		// SEED DEPARTMENTS
-		// =====================================================
 		private static async Task SeedDepartmentsAsync(AppDbContext context)
 		{
-			// Skip if departments already exist.
 			if (await context.Departments.AnyAsync())
 				return;
 
@@ -71,30 +56,11 @@ namespace EmployeeManagement.DATA.Seed
 			await context.SaveChangesAsync();
 		}
 
-		// =====================================================
-		// SEED EMPLOYEES
-		//
-		// Creates:
-		// 1. One Admin account.
-		// 2. Two Employee accounts per department (for testing
-		//    round robin ticket assignment later).
-		//
-		// NOTE: Passwords are hashed with BCrypt, same as
-		// EmployeeService.CreateAsync does at runtime.
-		// =====================================================
 		private static async Task SeedEmployeesAsync(AppDbContext context)
 		{
-			// Skip if employees already exist.
 			if (await context.Employees.AnyAsync())
 				return;
 
-			// ---------------------------------------------
-			// Admin account
-			//
-			// Login: admin@company.com / Admin@123
-			// Change this password after first login in a
-			// real deployment — this is a dev/test seed only.
-			// ---------------------------------------------
 			var admin = new Employee
 			{
 				Id = Guid.NewGuid(),
@@ -107,7 +73,6 @@ namespace EmployeeManagement.DATA.Seed
 				IsActive = true,
 				IsDeleted = false,
 				UpdatedAt = DateTime.UtcNow,
-				// Admin still needs a department FK — assign to the first one.
 				DepartmentId = await context.Departments
 					.OrderBy(d => d.Name)
 					.Select(d => d.Id)
@@ -116,12 +81,6 @@ namespace EmployeeManagement.DATA.Seed
 
 			await context.Employees.AddAsync(admin);
 
-			// ---------------------------------------------
-			// Two regular employees per department.
-			//
-			// Login password for all seeded employees:
-			// Employee@123
-			// ---------------------------------------------
 			var departments = await context.Departments.ToListAsync();
 
 			int counter = 1;
@@ -143,8 +102,6 @@ namespace EmployeeManagement.DATA.Seed
 						IsDeleted = false,
 						UpdatedAt = DateTime.UtcNow,
 						DepartmentId = department.Id,
-						// Left null intentionally — round robin picks
-						// employees with the oldest/null LastAssignedTicketAt first.
 						LastAssignedTicketAt = null
 					};
 
@@ -153,6 +110,77 @@ namespace EmployeeManagement.DATA.Seed
 				}
 			}
 
+			await context.SaveChangesAsync();
+		}
+
+		private static async Task SeedCustomersAsync(AppDbContext context)
+		{
+			if (await context.Customers.AnyAsync()) return;
+
+			var customers = new[]
+			{
+				new DomainModels.CustomerDATA.Customer
+				{
+					Id = Guid.NewGuid(),
+					Name = "John Doe",
+					Email = "john.doe@example.com",
+					Password = BCrypt.Net.BCrypt.HashPassword("Customer@123")
+				},
+				new DomainModels.CustomerDATA.Customer
+				{
+					Id = Guid.NewGuid(),
+					Name = "Jane Smith",
+					Email = "jane.smith@example.com",
+					Password = BCrypt.Net.BCrypt.HashPassword("Customer@123")
+				}
+			};
+
+			await context.Customers.AddRangeAsync(customers);
+			await context.SaveChangesAsync();
+		}
+
+		private static async Task SeedTicketsAsync(AppDbContext context)
+		{
+			if (await context.Tickets.AnyAsync()) return;
+
+			var customer = await context.Customers.FirstAsync();
+			var itDepartment = await context.Departments.FirstOrDefaultAsync(d => d.Name == "IT Support");
+			var billingDepartment = await context.Departments.FirstOrDefaultAsync(d => d.Name == "Billing");
+
+			var itEmployee = await context.Employees.FirstOrDefaultAsync(e => e.DepartmentId == itDepartment!.Id && e.Role != EmployeeRole.Admin);
+			var billingEmployee = await context.Employees.FirstOrDefaultAsync(e => e.DepartmentId == billingDepartment!.Id && e.Role != EmployeeRole.Admin);
+
+			if (customer == null || itDepartment == null || itEmployee == null) return;
+
+			var tickets = new[]
+			{
+				new DomainModels.TicketDATA.Ticket
+				{
+					Id = Guid.NewGuid(),
+					Title = "VPN Connection Issue",
+					Description = "Cannot connect to company VPN from home.",
+					CustomerId = customer.Id,
+					DepartmentId = itDepartment.Id,
+					AssignedEmployeeId = itEmployee.Id,
+					Status = DomainModels.TicketDATA.TicketStatus.Assigned,
+					CreatedAt = DateTime.UtcNow,
+					SlaStartTime = DateTime.UtcNow.AddHours(4)
+				},
+				new DomainModels.TicketDATA.Ticket
+				{
+					Id = Guid.NewGuid(),
+					Title = "Invoice Refund Query",
+					Description = "Requesting clarification on double billing invoice #1042.",
+					CustomerId = customer.Id,
+					DepartmentId = billingDepartment!.Id,
+					AssignedEmployeeId = billingEmployee!.Id,
+					Status = DomainModels.TicketDATA.TicketStatus.InProgress,
+					CreatedAt = DateTime.UtcNow,
+					SlaStartTime = DateTime.UtcNow.AddHours(4)
+				}
+			};
+
+			await context.Tickets.AddRangeAsync(tickets);
 			await context.SaveChangesAsync();
 		}
 	}
