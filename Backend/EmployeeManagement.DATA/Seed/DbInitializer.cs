@@ -148,7 +148,7 @@ namespace EmployeeManagement.DATA.Seed
 
 			var customers = await context.Customers.ToListAsync();
 			var hrDept = await context.Departments.FirstOrDefaultAsync(d => d.Name == "HR");
-			var seDept = await context.Departments.FirstOrDefaultAsync(d => d.Name == "Software Engineering");
+			var seDept = await context.Departments.FirstOrDefaultAsync(d => d.Name == "Software");
 			var salesDept = await context.Departments.FirstOrDefaultAsync(d => d.Name == "Sales");
 
 			var hrEmp = await context.Employees.FirstOrDefaultAsync(e => e.DepartmentId == hrDept!.Id && e.Role != EmployeeRole.Admin);
