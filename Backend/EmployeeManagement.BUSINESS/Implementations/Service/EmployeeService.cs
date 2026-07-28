@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -306,6 +306,39 @@ namespace EmployeeManagement.BUSINESS.Implementations.Service
 			await _context.Entry(employee)
 				.Reference(e => e.Department)
 				.LoadAsync();
+
+			return _mapper.Map<EmployeeResponseDto>(employee);
+		}
+
+		// =====================================================
+		// UPDATE EMPLOYEE ROLE
+		//
+		// Business Rules:
+		// SuperAdmins can assign any role.
+		// Admins cannot assign Admin or SuperAdmin roles.
+		// =====================================================
+		public async Task<EmployeeResponseDto?> UpdateRoleAsync(
+			Guid id,
+			UpdateEmployeeRoleDto dto,
+			string currentUserRole)
+		{
+			var employee = await _context.Employees
+				.Include(e => e.Department)
+				.FirstOrDefaultAsync(e => e.Id == id && !e.IsDeleted);
+
+			if (employee == null)
+				return null;
+
+			if (currentUserRole == EmployeeRole.Admin.ToString() && 
+				(dto.Role == EmployeeRole.Admin || dto.Role == EmployeeRole.SuperAdmin))
+			{
+				throw new UnauthorizedAccessException("Admins cannot grant Admin or SuperAdmin roles.");
+			}
+
+			employee.Role = dto.Role;
+			employee.UpdatedAt = DateTime.UtcNow;
+
+			await _context.SaveChangesAsync();
 
 			return _mapper.Map<EmployeeResponseDto>(employee);
 		}

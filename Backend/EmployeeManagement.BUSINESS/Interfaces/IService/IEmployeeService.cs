@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -22,6 +22,8 @@ namespace EmployeeManagement.BUSINESS.Interfaces.IService
 		Task<EmployeeResponseDto?> UpdateAsync(Guid id, UpdateEmployeeDto dto);
 
 		Task<EmployeeResponseDto?> UpdateDepartmentAsync(Guid id, UpdateEmployeeDepartmentDto dto);
+
+		Task<EmployeeResponseDto?> UpdateRoleAsync(Guid id, UpdateEmployeeRoleDto dto, string currentUserRole);
 
 		// Consider renaming to FireEmployeeAsync if you want the interface
 		// to match the business requirement.
