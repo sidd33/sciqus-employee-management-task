@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-
-
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -15,30 +12,18 @@ namespace EmployeeManagement.DATA.Seed
 {
 	public static class DbInitializer
 	{
-		// =====================================================
-		// SEED DATABASE
-		//
-		// Called once at startup (from Program.cs) after
-		// applying migrations. Safe to call every run —
-		// each block checks whether data already exists
-		// before inserting anything.
-		// =====================================================
 		public static async Task SeedAsync(AppDbContext context)
 		{
-			// Make sure all pending migrations are applied
-			// before seeding. Safe no-op if already up to date.
 			await context.Database.MigrateAsync();
 
 			await SeedDepartmentsAsync(context);
 			await SeedEmployeesAsync(context);
+			await SeedCustomersAsync(context);
+			await SeedTicketsAsync(context);
 		}
 
-		// =====================================================
-		// SEED DEPARTMENTS
-		// =====================================================
 		private static async Task SeedDepartmentsAsync(AppDbContext context)
 		{
-			// Skip if departments already exist.
 			if (await context.Departments.AnyAsync())
 				return;
 
@@ -71,30 +56,11 @@ namespace EmployeeManagement.DATA.Seed
 			await context.SaveChangesAsync();
 		}
 
-		// =====================================================
-		// SEED EMPLOYEES
-		//
-		// Creates:
-		// 1. One Admin account.
-		// 2. Two Employee accounts per department (for testing
-		//    round robin ticket assignment later).
-		//
-		// NOTE: Passwords are hashed with BCrypt, same as
-		// EmployeeService.CreateAsync does at runtime.
-		// =====================================================
 		private static async Task SeedEmployeesAsync(AppDbContext context)
 		{
-			// Skip if employees already exist.
 			if (await context.Employees.AnyAsync())
 				return;
 
-			// ---------------------------------------------
-			// Admin account
-			//
-			// Login: admin@company.com / Admin@123
-			// Change this password after first login in a
-			// real deployment — this is a dev/test seed only.
-			// ---------------------------------------------
 			var admin = new Employee
 			{
 				Id = Guid.NewGuid(),
@@ -107,7 +73,6 @@ namespace EmployeeManagement.DATA.Seed
 				IsActive = true,
 				IsDeleted = false,
 				UpdatedAt = DateTime.UtcNow,
-				// Admin still needs a department FK — assign to the first one.
 				DepartmentId = await context.Departments
 					.OrderBy(d => d.Name)
 					.Select(d => d.Id)
@@ -116,12 +81,6 @@ namespace EmployeeManagement.DATA.Seed
 
 			await context.Employees.AddAsync(admin);
 
-			// ---------------------------------------------
-			// Two regular employees per department.
-			//
-			// Login password for all seeded employees:
-			// Employee@123
-			// ---------------------------------------------
 			var departments = await context.Departments.ToListAsync();
 
 			int counter = 1;
@@ -143,8 +102,6 @@ namespace EmployeeManagement.DATA.Seed
 						IsDeleted = false,
 						UpdatedAt = DateTime.UtcNow,
 						DepartmentId = department.Id,
-						// Left null intentionally — round robin picks
-						// employees with the oldest/null LastAssignedTicketAt first.
 						LastAssignedTicketAt = null
 					};
 
@@ -153,6 +110,59 @@ namespace EmployeeManagement.DATA.Seed
 				}
 			}
 
+			await context.SaveChangesAsync();
+		}
+
+		private static async Task SeedCustomersAsync(AppDbContext context)
+		{
+			if (await context.Customers.AnyAsync()) return;
+
+			var customers = new[]
+			{
+				new DomainModels.CustomerDATA.Customer { Id = Guid.NewGuid(), Name = "Alice Johnson", Email = "alice.johnson@example.com", Password = BCrypt.Net.BCrypt.HashPassword("Customer@123") },
+				new DomainModels.CustomerDATA.Customer { Id = Guid.NewGuid(), Name = "Bob Smith", Email = "bob.smith@example.com", Password = BCrypt.Net.BCrypt.HashPassword("Customer@123") },
+				new DomainModels.CustomerDATA.Customer { Id = Guid.NewGuid(), Name = "Charlie Davis", Email = "charlie.davis@example.com", Password = BCrypt.Net.BCrypt.HashPassword("Customer@123") },
+				new DomainModels.CustomerDATA.Customer { Id = Guid.NewGuid(), Name = "Diana Prince", Email = "diana.prince@example.com", Password = BCrypt.Net.BCrypt.HashPassword("Customer@123") },
+				new DomainModels.CustomerDATA.Customer { Id = Guid.NewGuid(), Name = "Ethan Hunt", Email = "ethan.hunt@example.com", Password = BCrypt.Net.BCrypt.HashPassword("Customer@123") },
+				new DomainModels.CustomerDATA.Customer { Id = Guid.NewGuid(), Name = "Fiona Gallagher", Email = "fiona.gallagher@example.com", Password = BCrypt.Net.BCrypt.HashPassword("Customer@123") },
+				new DomainModels.CustomerDATA.Customer { Id = Guid.NewGuid(), Name = "George Clark", Email = "george.clark@example.com", Password = BCrypt.Net.BCrypt.HashPassword("Customer@123") },
+				new DomainModels.CustomerDATA.Customer { Id = Guid.NewGuid(), Name = "Hannah Abbott", Email = "hannah.abbott@example.com", Password = BCrypt.Net.BCrypt.HashPassword("Customer@123") },
+				new DomainModels.CustomerDATA.Customer { Id = Guid.NewGuid(), Name = "Ian Malcolm", Email = "ian.malcolm@example.com", Password = BCrypt.Net.BCrypt.HashPassword("Customer@123") },
+				new DomainModels.CustomerDATA.Customer { Id = Guid.NewGuid(), Name = "Julia Roberts", Email = "julia.roberts@example.com", Password = BCrypt.Net.BCrypt.HashPassword("Customer@123") }
+			};
+
+			await context.Customers.AddRangeAsync(customers);
+			await context.SaveChangesAsync();
+		}
+
+		private static async Task SeedTicketsAsync(AppDbContext context)
+		{
+			if (await context.Tickets.AnyAsync()) return;
+
+			var customers = await context.Customers.ToListAsync();
+			var itDept = await context.Departments.FirstOrDefaultAsync(d => d.Name == "IT Support");
+			var billingDept = await context.Departments.FirstOrDefaultAsync(d => d.Name == "Billing");
+			var generalDept = await context.Departments.FirstOrDefaultAsync(d => d.Name == "General Inquiries");
+
+			var itEmp = await context.Employees.FirstOrDefaultAsync(e => e.DepartmentId == itDept!.Id && e.Role != EmployeeRole.Admin);
+			var billingEmp = await context.Employees.FirstOrDefaultAsync(e => e.DepartmentId == billingDept!.Id && e.Role != EmployeeRole.Admin);
+			var generalEmp = await context.Employees.FirstOrDefaultAsync(e => e.DepartmentId == generalDept!.Id && e.Role != EmployeeRole.Admin);
+
+			var tickets = new[]
+			{
+				new DomainModels.TicketDATA.Ticket { Id = Guid.NewGuid(), Title = "VPN Connection Drop", Description = "Cannot access corporate VPN from home network.", CustomerId = customers[0].Id, DepartmentId = itDept!.Id, AssignedEmployeeId = itEmp!.Id, Status = DomainModels.TicketDATA.TicketStatus.Assigned, CreatedAt = DateTime.UtcNow.AddDays(-10), SlaStartTime = DateTime.UtcNow.AddDays(-10).AddHours(4) },
+				new DomainModels.TicketDATA.Ticket { Id = Guid.NewGuid(), Title = "Double Billing Charge", Description = "Billed twice for subscription invoice #9921.", CustomerId = customers[1].Id, DepartmentId = billingDept!.Id, AssignedEmployeeId = billingEmp!.Id, Status = DomainModels.TicketDATA.TicketStatus.InProgress, CreatedAt = DateTime.UtcNow.AddDays(-9), SlaStartTime = DateTime.UtcNow.AddDays(-9).AddHours(4) },
+				new DomainModels.TicketDATA.Ticket { Id = Guid.NewGuid(), Title = "Account Upgrade Query", Description = "Inquiring about Enterprise plan tier pricing.", CustomerId = customers[2].Id, DepartmentId = generalDept!.Id, AssignedEmployeeId = generalEmp!.Id, Status = DomainModels.TicketDATA.TicketStatus.Completed, CreatedAt = DateTime.UtcNow.AddDays(-8), SlaStartTime = DateTime.UtcNow.AddDays(-8).AddHours(4) },
+				new DomainModels.TicketDATA.Ticket { Id = Guid.NewGuid(), Title = "Laptop Keyboard Faulty", Description = "Spacebar key is unresponsive on company hardware.", CustomerId = customers[3].Id, DepartmentId = itDept.Id, AssignedEmployeeId = itEmp.Id, Status = DomainModels.TicketDATA.TicketStatus.Assigned, CreatedAt = DateTime.UtcNow.AddDays(-7), SlaStartTime = DateTime.UtcNow.AddDays(-7).AddHours(4) },
+				new DomainModels.TicketDATA.Ticket { Id = Guid.NewGuid(), Title = "Refund Delay Notice", Description = "Refund requested 5 days ago has not settled yet.", CustomerId = customers[4].Id, DepartmentId = billingDept.Id, AssignedEmployeeId = billingEmp.Id, Status = DomainModels.TicketDATA.TicketStatus.InProgress, CreatedAt = DateTime.UtcNow.AddDays(-6), SlaStartTime = DateTime.UtcNow.AddDays(-6).AddHours(4) },
+				new DomainModels.TicketDATA.Ticket { Id = Guid.NewGuid(), Title = "Office Hours Question", Description = "What are the holiday operating support hours?", CustomerId = customers[5].Id, DepartmentId = generalDept.Id, AssignedEmployeeId = generalEmp.Id, Status = DomainModels.TicketDATA.TicketStatus.Closed, CreatedAt = DateTime.UtcNow.AddDays(-5), SlaStartTime = DateTime.UtcNow.AddDays(-5).AddHours(4) },
+				new DomainModels.TicketDATA.Ticket { Id = Guid.NewGuid(), Title = "Password Reset Token", Description = "Password reset link expired immediately.", CustomerId = customers[6].Id, DepartmentId = itDept.Id, AssignedEmployeeId = itEmp.Id, Status = DomainModels.TicketDATA.TicketStatus.Reopened, CreatedAt = DateTime.UtcNow.AddDays(-4), SlaStartTime = DateTime.UtcNow.AddDays(-4).AddHours(4) },
+				new DomainModels.TicketDATA.Ticket { Id = Guid.NewGuid(), Title = "Tax Invoice Receipt", Description = "Need official tax invoice for Q3 tax filing.", CustomerId = customers[7].Id, DepartmentId = billingDept.Id, AssignedEmployeeId = billingEmp.Id, Status = DomainModels.TicketDATA.TicketStatus.Completed, CreatedAt = DateTime.UtcNow.AddDays(-3), SlaStartTime = DateTime.UtcNow.AddDays(-3).AddHours(4) },
+				new DomainModels.TicketDATA.Ticket { Id = Guid.NewGuid(), Title = "Email Alias Setup", Description = "Requesting new sales team email forwarder alias.", CustomerId = customers[8].Id, DepartmentId = itDept.Id, AssignedEmployeeId = itEmp.Id, Status = DomainModels.TicketDATA.TicketStatus.Assigned, CreatedAt = DateTime.UtcNow.AddDays(-2), SlaStartTime = DateTime.UtcNow.AddDays(-2).AddHours(4) },
+				new DomainModels.TicketDATA.Ticket { Id = Guid.NewGuid(), Title = "Partner Portal Info", Description = "Seeking documentation on B2B API integrations.", CustomerId = customers[9].Id, DepartmentId = generalDept.Id, AssignedEmployeeId = generalEmp.Id, Status = DomainModels.TicketDATA.TicketStatus.InProgress, CreatedAt = DateTime.UtcNow.AddDays(-1), SlaStartTime = DateTime.UtcNow.AddDays(-1).AddHours(4) }
+			};
+
+			await context.Tickets.AddRangeAsync(tickets);
 			await context.SaveChangesAsync();
 		}
 	}
