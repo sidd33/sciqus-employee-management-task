@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { ChevronRight, Briefcase } from 'lucide-react-native';
 import { Employee } from '../services/employeeService';
+import ProfileAvatar from './ProfileAvatar';
 
 interface EmployeeListItemProps {
   employee: Employee;
@@ -9,21 +10,22 @@ interface EmployeeListItemProps {
 }
 
 const EmployeeListItem: React.FC<EmployeeListItemProps> = ({ employee, onPress }) => {
-  const getInitials = () => {
-    return `${employee.firstName.charAt(0)}${employee.lastName.charAt(0)}`.toUpperCase();
-  };
-
   return (
     <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.7}>
-      <View style={styles.avatar}>
-        <Text style={styles.avatarText}>{getInitials()}</Text>
+      <View style={{ marginRight: 12 }}>
+        <ProfileAvatar 
+          firstName={employee.firstName} 
+          lastName={employee.lastName} 
+          photoUrl={employee.photoUrl} 
+          size={48} 
+        />
       </View>
       <View style={styles.info}>
         <Text style={styles.name}>{employee.firstName} {employee.lastName}</Text>
-        {employee.department && (
+        {!!employee.department && (
           <View style={styles.departmentRow}>
             <Briefcase size={14} color="#8E8E93" />
-            <Text style={styles.department}>{employee.department}</Text>
+            <Text style={styles.department}>{employee.department.name}</Text>
           </View>
         )}
       </View>

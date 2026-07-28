@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using EmployeeManagement.BUSINESS.BusinessModels.RequestDTOs.CustomerRequestDtos;
+using EmployeeManagement.BUSINESS.BusinessModels.RequestDTOs.EmployeeRequestDtos; // Reusing UploadProfilePictureDto
 using EmployeeManagement.BUSINESS.Interfaces.IService;
 
 [ApiController]
@@ -72,5 +73,38 @@ public class CustomersController : ControllerBase
         var deleted = await _customerService.DeleteCustomerAsync(id);
         if (!deleted) return NotFound();
         return NoContent();
+    }
+
+    [HttpPost("{id:guid}/profile-picture")]
+    public async Task<IActionResult> UploadProfilePicture(
+        Guid id,
+        [FromForm] UploadProfilePictureDto request)
+    {
+        var currentUserId = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+        var currentUserRole = User.FindFirstValue(System.Security.Claims.ClaimTypes.Role);
+
+        if (currentUserRole != "Admin" && currentUserRole != "SuperAdmin" && currentUserId != id.ToString())
+        {
+            return Forbid();
+        }
+
+        if (request.File == null || request.File.Length == 0)
+        {
+            return BadRequest(new { message = "No file uploaded." });
+        }
+
+        try
+        {
+            var path = await _customerService.UploadProfilePictureAsync(id, request.File);
+            if (path == null)
+            {
+                return NotFound(new { message = "Customer not found." });
+            }
+            return Ok(new { profilePicture = path });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = ex.Message });
+        }
     }
 }

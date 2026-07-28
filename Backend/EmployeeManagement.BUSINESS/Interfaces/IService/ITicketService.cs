@@ -10,4 +10,5 @@ public interface ITicketService
     Task<IEnumerable<TicketResponseDto>> GetAllTicketsAsync(TicketQueryParameters query);
     Task<TicketResponseDto?> UpdateTicketAsync(Guid id, UpdateTicketDto dto);
     Task<TicketResponseDto?> AssignTicketAsync(Guid id, AssignTicketDto dto);
+    Task<bool> DeleteTicketAsync(Guid id);
 }
