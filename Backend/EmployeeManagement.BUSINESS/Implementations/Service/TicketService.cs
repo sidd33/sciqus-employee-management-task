@@ -94,10 +94,34 @@ public class TicketService : ITicketService
         };
     }
 
-    public async Task<IEnumerable<TicketResponseDto>> GetAllTicketsAsync()
+    public async Task<IEnumerable<TicketResponseDto>> GetAllTicketsAsync(TicketQueryParameters query)
     {
-        var tickets = await _context.Tickets
+        var ticketsQuery = _context.Tickets
             .Include(t => t.Customer)
+            .AsQueryable();
+
+        if (query.Status.HasValue)
+            ticketsQuery = ticketsQuery.Where(t => t.Status == query.Status.Value);
+        if (query.DepartmentId.HasValue)
+            ticketsQuery = ticketsQuery.Where(t => t.DepartmentId == query.DepartmentId.Value);
+        if (query.CustomerId.HasValue)
+            ticketsQuery = ticketsQuery.Where(t => t.CustomerId == query.CustomerId.Value);
+        if (!string.IsNullOrWhiteSpace(query.SearchTerm))
+            ticketsQuery = ticketsQuery.Where(t => t.Title.Contains(query.SearchTerm) || t.Description.Contains(query.SearchTerm));
+
+        ticketsQuery = (query.SortBy?.ToLower(), query.IsDescending) switch
+        {
+            ("title", false) => ticketsQuery.OrderBy(t => t.Title),
+            ("title", true)  => ticketsQuery.OrderByDescending(t => t.Title),
+            ("status", false) => ticketsQuery.OrderBy(t => t.Status),
+            ("status", true)  => ticketsQuery.OrderByDescending(t => t.Status),
+            (_, false)        => ticketsQuery.OrderBy(t => t.CreatedAt),
+            _                 => ticketsQuery.OrderByDescending(t => t.CreatedAt)
+        };
+
+        var tickets = await ticketsQuery
+            .Skip((query.PageNumber - 1) * query.PageSize)
+            .Take(query.PageSize)
             .ToListAsync();
 
         return tickets.Select(ticket => new TicketResponseDto
@@ -130,6 +154,38 @@ public class TicketService : ITicketService
         if (dto.Status.HasValue) ticket.Status = dto.Status.Value;
         if (dto.DepartmentId.HasValue) ticket.DepartmentId = dto.DepartmentId.Value;
         ticket.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return new TicketResponseDto
+        {
+            Id = ticket.Id,
+            Title = ticket.Title,
+            Description = ticket.Description,
+            Status = ticket.Status.ToString(),
+            CustomerId = ticket.CustomerId,
+            CustomerName = ticket.Customer?.Name ?? string.Empty,
+            CustomerEmail = ticket.Customer?.Email ?? string.Empty,
+            AssignedEmployeeId = ticket.AssignedEmployeeId,
+            DepartmentId = ticket.DepartmentId,
+            CreatedAt = ticket.CreatedAt,
+            SlaStartTime = ticket.SlaStartTime,
+            IsSlaBreached = ticket.IsSlaBreached
+        };
+    }
+
+    public async Task<TicketResponseDto?> AssignTicketAsync(Guid id, AssignTicketDto dto)
+    {
+        var ticket = await _context.Tickets.Include(t => t.Customer).FirstOrDefaultAsync(t => t.Id == id);
+        if (ticket == null) return null;
+
+        var employee = await _context.Employees.FirstOrDefaultAsync(e => e.Id == dto.EmployeeId && e.IsActive && !e.IsDeleted && e.Role != EmployeeRole.Admin);
+        if (employee == null) throw new InvalidOperationException("Specified employee is invalid or unavailable for assignment.");
+
+        ticket.AssignedEmployeeId = employee.Id;
+        ticket.Status = TicketStatus.Assigned;
+        ticket.UpdatedAt = DateTime.UtcNow;
+        employee.LastAssignedTicketAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
 

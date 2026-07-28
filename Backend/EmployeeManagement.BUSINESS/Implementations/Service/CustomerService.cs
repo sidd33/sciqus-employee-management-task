@@ -46,10 +46,28 @@ public class CustomerService : ICustomerService
         };
     }
 
-    public async Task<IEnumerable<CustomerResponseDto>> GetAllCustomersAsync()
+    public async Task<IEnumerable<CustomerResponseDto>> GetAllCustomersAsync(CustomerQueryParameters query)
     {
-        var customers = await _context.Customers
+        var customersQuery = _context.Customers
             .Include(c => c.Tickets)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(query.SearchTerm))
+        {
+            customersQuery = customersQuery.Where(c => c.Name.Contains(query.SearchTerm) || c.Email.Contains(query.SearchTerm));
+        }
+
+        customersQuery = (query.SortBy?.ToLower(), query.IsDescending) switch
+        {
+            ("email", false) => customersQuery.OrderBy(c => c.Email),
+            ("email", true)  => customersQuery.OrderByDescending(c => c.Email),
+            (_, true)        => customersQuery.OrderByDescending(c => c.Name),
+            _                 => customersQuery.OrderBy(c => c.Name)
+        };
+
+        var customers = await customersQuery
+            .Skip((query.PageNumber - 1) * query.PageSize)
+            .Take(query.PageSize)
             .ToListAsync();
 
         return customers.Select(c => new CustomerResponseDto
@@ -83,7 +101,17 @@ public class CustomerService : ICustomerService
         if (customer == null) return null;
 
         if (!string.IsNullOrWhiteSpace(dto.Name)) customer.Name = dto.Name;
-        if (!string.IsNullOrWhiteSpace(dto.Email)) customer.Email = dto.Email;
+
+        if (!string.IsNullOrWhiteSpace(dto.Email))
+        {
+            var emailExists = await _context.Customers.AnyAsync(c => c.Email == dto.Email && c.Id != id);
+            if (emailExists)
+            {
+                throw new InvalidOperationException("This email address is already in use by another customer.");
+            }
+            customer.Email = dto.Email;
+        }
+
         if (dto.ProfilePicture != null) customer.ProfilePicture = dto.ProfilePicture;
 
         await _context.SaveChangesAsync();

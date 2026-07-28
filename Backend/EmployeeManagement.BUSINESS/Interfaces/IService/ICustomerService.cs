@@ -6,7 +6,7 @@ using EmployeeManagement.BUSINESS.BusinessModels.ResponseDTOs.CustomerResponseDt
 public interface ICustomerService
 {
     Task<CustomerResponseDto?> GetCustomerByIdAsync(Guid id);
-    Task<IEnumerable<CustomerResponseDto>> GetAllCustomersAsync();
+    Task<IEnumerable<CustomerResponseDto>> GetAllCustomersAsync(CustomerQueryParameters query);
     Task<CustomerResponseDto?> UpdateCustomerAsync(Guid id, UpdateCustomerDto dto);
     Task<bool> DeleteCustomerAsync(Guid id);
 }

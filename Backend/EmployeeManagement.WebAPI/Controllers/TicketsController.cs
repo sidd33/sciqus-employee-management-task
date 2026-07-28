@@ -31,9 +31,9 @@ public class TicketsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAllTickets()
+    public async Task<IActionResult> GetAllTickets([FromQuery] TicketQueryParameters query)
     {
-        var tickets = await _ticketService.GetAllTicketsAsync();
+        var tickets = await _ticketService.GetAllTicketsAsync(query);
         return Ok(tickets);
     }
 
@@ -43,5 +43,13 @@ public class TicketsController : ControllerBase
         var updatedTicket = await _ticketService.UpdateTicketAsync(id, dto);
         if (updatedTicket == null) return NotFound();
         return Ok(updatedTicket);
+    }
+
+    [HttpPatch("{id:guid}/assign")]
+    public async Task<IActionResult> AssignTicket(Guid id, [FromBody] AssignTicketDto dto)
+    {
+        var assignedTicket = await _ticketService.AssignTicketAsync(id, dto);
+        if (assignedTicket == null) return NotFound();
+        return Ok(assignedTicket);
     }
 }

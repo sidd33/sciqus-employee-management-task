@@ -24,18 +24,25 @@ public class CustomersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAllCustomers()
+    public async Task<IActionResult> GetAllCustomers([FromQuery] CustomerQueryParameters query)
     {
-        var customers = await _customerService.GetAllCustomersAsync();
+        var customers = await _customerService.GetAllCustomersAsync(query);
         return Ok(customers);
     }
 
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> UpdateCustomer(Guid id, [FromBody] UpdateCustomerDto dto)
     {
-        var updatedCustomer = await _customerService.UpdateCustomerAsync(id, dto);
-        if (updatedCustomer == null) return NotFound();
-        return Ok(updatedCustomer);
+        try
+        {
+            var updatedCustomer = await _customerService.UpdateCustomerAsync(id, dto);
+            if (updatedCustomer == null) return NotFound();
+            return Ok(updatedCustomer);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpDelete("{id:guid}")]
