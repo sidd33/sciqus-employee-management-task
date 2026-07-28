@@ -8,6 +8,8 @@ import { RootStackParamList } from '../../App';
 import { useFocusEffect } from '@react-navigation/native';
 import AppleTextInput from '../components/AppleTextInput';
 
+import { authService, User } from '../services/authService';
+
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
 interface Props {
@@ -16,14 +18,33 @@ interface Props {
 
 const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
 
-  const fetchEmployees = async () => {
+  const fetchEmployees = async (pageNum: number = 1, shouldRefresh: boolean = false) => {
+    if (loading && !shouldRefresh) return;
+    
     try {
-      const data = await EmployeeService.getAll();
-      setEmployees(data);
+      if (shouldRefresh) setRefreshing(true);
+      else setLoading(true);
+
+      const response = await EmployeeService.getAll(pageNum, 10, searchQuery);
+      
+      if (pageNum === 1) {
+        setEmployees(response.items || []);
+      } else {
+        setEmployees(prev => [...prev, ...(response.items || [])]);
+      }
+      
+      setHasMore(pageNum < response.totalPages);
+      setPage(pageNum);
+      
+      const user = await authService.getUser();
+      setCurrentUser(user);
     } catch (error) {
       console.error('Failed to fetch employees:', error);
     } finally {
@@ -34,31 +55,37 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
   useFocusEffect(
     useCallback(() => {
-      fetchEmployees();
-    }, [])
+      fetchEmployees(1, true);
+    }, [searchQuery])
   );
 
   const onRefresh = () => {
-    setRefreshing(true);
-    fetchEmployees();
+    fetchEmployees(1, true);
   };
 
-  const filteredEmployees = employees.filter((emp) =>
-    `${emp.firstName} ${emp.lastName}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    emp.department?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handleLoadMore = () => {
+    if (hasMore && !loading) {
+      fetchEmployees(page + 1);
+    }
+  };
+
+
 
   React.useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <Plus
-          size={28}
-          color="#007AFF"
-          onPress={() => navigation.navigate('EmployeeEdit', {})}
-        />
-      ),
-    });
-  }, [navigation]);
+    if (currentUser && currentUser.role === 2) {
+      navigation.setOptions({
+        headerRight: () => (
+          <Plus
+            size={28}
+            color="#007AFF"
+            onPress={() => navigation.navigate('EmployeeEdit', {})}
+          />
+        ),
+      });
+    } else {
+      navigation.setOptions({ headerRight: () => null });
+    }
+  }, [navigation, currentUser]);
 
   if (loading) {
     return (
@@ -79,7 +106,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         />
       </View>
       <FlatList
-        data={filteredEmployees}
+        data={employees}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <EmployeeListItem
@@ -87,6 +114,8 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
             onPress={() => navigation.navigate('EmployeeDetail', { id: item.id })}
           />
         )}
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.5}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#007AFF" />
         }

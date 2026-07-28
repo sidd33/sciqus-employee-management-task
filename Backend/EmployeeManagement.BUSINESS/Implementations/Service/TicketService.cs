@@ -207,4 +207,14 @@ public class TicketService : ITicketService
             IsSlaBreached = ticket.IsSlaBreached
         };
     }
+
+    public async Task<bool> DeleteTicketAsync(Guid id)
+    {
+        var ticket = await _context.Tickets.FindAsync(id);
+        if (ticket == null) return false;
+
+        _context.Tickets.Remove(ticket);
+        await _context.SaveChangesAsync();
+        return true;
+    }
 }

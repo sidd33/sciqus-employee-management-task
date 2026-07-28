@@ -9,13 +9,13 @@ interface AppleTextInputProps extends TextInputProps {
 const AppleTextInput: React.FC<AppleTextInputProps> = ({ label, error, ...props }) => {
   return (
     <View style={styles.container}>
-      {label && <Text style={styles.label}>{label}</Text>}
+      {!!label && <Text style={styles.label}>{label}</Text>}
       <TextInput
         style={[styles.input, error ? styles.inputError : null, props.style]}
         placeholderTextColor="#C7C7CC"
         {...props}
       />
-      {error && <Text style={styles.errorText}>{error}</Text>}
+      {!!error && <Text style={styles.errorText}>{error}</Text>}
     </View>
   );
 };
