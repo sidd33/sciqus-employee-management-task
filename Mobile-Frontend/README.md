@@ -1,101 +1,111 @@
-# Sciqus Group Project
+# Sciqus Mobile Frontend Setup Guide
 
-This repository contains the source code for the Sciqus group project, which consists of a robust backend management API and a cross-platform mobile frontend application.
+This guide contains all the configuration and steps required to run this React Native application on a new system (Windows, macOS, or Linux).
 
-##  Project Structure
+## 1. Prerequisites
 
-The repository is divided into two main components:
+Before starting, ensure you have the following installed on your system:
 
-1. **`managment.Api`**: The backend RESTful API built with .NET 8 (ASP.NET Core). It handles data management, business logic, and serves as the core backend for the mobile application.
-2. **`Mobile-Frontend`**: The mobile client application built with React Native. It provides a user-friendly interface for interacting with the management system on both iOS and Android devices.
+### Node.js & npm
+- Download and install **Node.js** (v18 or newer is recommended): [Node.js Official Site](https://nodejs.org/)
+- Verify installation by running: `node -v` and `npm -v`
+
+### Java Development Kit (JDK)
+- React Native requires **Java 17**.
+- You can install it via Microsoft Build of OpenJDK or Azul Zulu.
+- **Windows (Chocolatey):** `choco install openjdk17`
+- **macOS (Homebrew):** `brew install openjdk@17`
+
+### Exact Versions Used in this Project
+For guaranteed compatibility, the following exact versions are configured and tested:
+- **Node.js**: v18.x or higher
+- **React Native**: 0.74.5
+- **Java (JDK)**: 17
+- **Gradle**: 8.6
+- **Kotlin**: 1.9.22
+- **Android Target SDK**: 34
+- **Android Min SDK**: 24
+- **Android Build Tools**: 34.0.0
+
+### Android Studio (For Android Development)
+1. Download and install [Android Studio](https://developer.android.com/studio).
+2. During installation, make sure the following are checked:
+   - `Android SDK`
+   - `Android SDK Platform`
+   - `Android Virtual Device (AVD)`
+3. Open Android Studio -> SDK Manager (Tools > SDK Manager) and ensure **Android 14 (API Level 34)** is installed.
+4. Under the "SDK Tools" tab, click "Show Package Details" at the bottom right, and ensure **Android SDK Build-Tools 34.0.0** is checked and installed.
 
 ---
 
-##  Technologies Used
+## 2. Environment Variables Configuration
 
-### Backend (`managment.Api`)
-- **Framework**: .NET 8 / ASP.NET Core Web API
-- **Language**: C#
-- **ORM**: Entity Framework Core (EF Core)
-- **Architecture**: N-Tier Architecture (Controllers, Services, DTOs, Entities, Data access)
+You MUST configure your environment variables for React Native to find the Android SDK.
 
-### Frontend (`Mobile-Frontend`)
-- **Framework**: React Native
-- **Language**: TypeScript / JavaScript
-- **Platform**: iOS & Android
+### Windows
+1. Open Windows Search and type "Environment Variables" -> click **Edit the system environment variables**.
+2. Click **Environment Variables...**
+3. Under "User variables", click **New...**
+   - **Variable name:** `ANDROID_HOME`
+   - **Variable value:** `C:\Users\YOUR_USERNAME\AppData\Local\Android\Sdk` *(Replace YOUR_USERNAME with your actual Windows username)*
+4. Next, select the `Path` variable under "User variables" and click **Edit...**
+5. Add this new entry: `%ANDROID_HOME%\platform-tools`
+6. Click OK and restart your terminal/command prompt.
+
+### macOS / Linux
+Open your shell configuration file (e.g., `~/.zshrc` or `~/.bash_profile`) and add:
+```bash
+export ANDROID_HOME=$HOME/Library/Android/sdk
+export PATH=$PATH:$ANDROID_HOME/emulator
+export PATH=$PATH:$ANDROID_HOME/platform-tools
+```
+Run `source ~/.zshrc` to apply the changes.
 
 ---
 
-##  Getting Started
+## 3. Project Installation
 
-### Prerequisites
-Before you begin, ensure you have the following installed:
-- [Node.js](https://nodejs.org/) (for React Native)
-- [React Native CLI environment setup](https://reactnative.dev/docs/environment-setup)
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) (for the backend API)
-- A suitable IDE (e.g., Visual Studio, VS Code, or Cursor)
-- A local or remote database server (check `appsettings.json` for the connection string)
+Once the prerequisites are installed, follow these steps to set up the project:
 
-### 1. Backend Setup (`managment.Api`)
-
-1. Open a terminal and navigate to the API directory:
-   ```bash
-   cd managment.Api
-   ```
-2. Restore the required .NET packages:
-   ```bash
-   dotnet restore
-   ```
-3. Update the database using Entity Framework Core migrations (ensure your database connection string in `appsettings.json` is correct):
-   ```bash
-   dotnet ef database update
-   ```
-4. Run the API:
-   ```bash
-   dotnet run
-   ```
-   *The API should now be running locally. You can typically access the Swagger UI at `https://localhost:<port>/swagger`.*
-
-### 2. Frontend Setup (`Mobile-Frontend`)
-
-1. Open a new terminal and navigate to the mobile frontend directory:
+1. Clone the repository and navigate to the mobile frontend folder:
    ```bash
    cd Mobile-Frontend
    ```
-2. Install the necessary Node dependencies:
+
+2. Install the project dependencies:
    ```bash
    npm install
-   # or
-   yarn install
    ```
-3. **For iOS development (macOS only):**
-   ```bash
-   cd ios
-   pod install
-   cd ..
-   ```
-4. Start the React Native Metro bundler:
-   ```bash
-   npm start
-   # or
-   yarn start
-   ```
-5. In a separate terminal (or by pressing `i` or `a` in the Metro console), start the application on your emulator/device:
-   - **For Android:** `npm run android`
-   - **For iOS:** `npm run ios`
 
 ---
 
-##  Configuration
+## 4. Running the Application
 
-- **Backend Configuration**: All backend configuration like database connection strings and environment variables can be found in `managment.Api/appsettings.json` and `appsettings.Development.json`.
-- **Frontend Configuration**: Make sure the frontend is pointing to your locally running API URL. Look for a `.env` file or update the base URL in the frontend's API service (`src/services/api.ts`).
+### Start the Metro Bundler
+The Metro bundler is the JavaScript server for React Native. Keep this running in its own terminal window.
+```bash
+npm start
+```
+
+### Run on Android Emulator
+In a separate terminal window, ensure your Android Virtual Device (AVD) is running, or let React Native launch it automatically:
+```bash
+npm run android
+```
+
+### Run on iOS (macOS only)
+If you are on a Mac and want to run the app on an iPhone simulator, you must install CocoaPods first:
+```bash
+cd ios
+pod install
+cd ..
+npm run ios
+```
 
 ---
 
-##  Contributing
+## Troubleshooting
 
-When contributing to this project, please ensure you:
-1. Create a new branch for your feature or bugfix (`git checkout -b feature/your-feature-name`).
-2. Commit your changes with clear and descriptive messages.
-3. Push to your branch and open a Pull Request against the `main` branch.
+- **"Command not found: react-native" or SDK errors:** Double-check your `ANDROID_HOME` environment variable and ensure `platform-tools` is in your `PATH`.
+- **EPERM / EBUSY errors on Windows:** Close Android Studio, stop the Metro bundler, and run `npm start -- --reset-cache`.
+- **Backend Connection Issues:** If the mobile app fails to log in, ensure your `.NET` backend is running on `localhost`. By default, the Android emulator maps `10.0.2.2` to your computer's localhost. If your API is running on a different port, update the `API_BASE_URL` in `src/services/api.ts`.

@@ -6,7 +6,9 @@ import { RootStackParamList } from '../../App';
 import EmployeeService, { Employee } from '../services/employeeService';
 import GlassCard from '../components/GlassCard';
 import AppleButton from '../components/AppleButton';
+import ProfileAvatar from '../components/ProfileAvatar';
 import { Briefcase, Mail, User, Calendar } from 'lucide-react-native';
+import { authService, User as AuthUser } from '../services/authService';
 
 type EmployeeDetailScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'EmployeeDetail'>;
 type EmployeeDetailScreenRouteProp = RouteProp<RootStackParamList, 'EmployeeDetail'>;
@@ -19,10 +21,12 @@ interface Props {
 const EmployeeDetailScreen: React.FC<Props> = ({ navigation, route }) => {
   const { id } = route.params;
   const [employee, setEmployee] = useState<Employee | null>(null);
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
+    authService.getUser().then(setCurrentUser);
     fetchEmployee();
   }, [id]);
 
@@ -73,11 +77,13 @@ const EmployeeDetailScreen: React.FC<Props> = ({ navigation, route }) => {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <GlassCard style={styles.card}>
-          <View style={styles.avatarLarge}>
-            <Text style={styles.avatarLargeText}>
-              {employee.firstName.charAt(0)}{employee.lastName.charAt(0)}
-            </Text>
-          </View>
+          <ProfileAvatar 
+            firstName={employee.firstName} 
+            lastName={employee.lastName} 
+            photoUrl={employee.photoUrl} 
+            size={80} 
+          />
+          <View style={{ height: 16 }} />
           <Text style={styles.nameHeader}>{employee.firstName} {employee.lastName}</Text>
           <Text style={styles.roleHeader}>{roleName}</Text>
         </GlassCard>
@@ -101,7 +107,7 @@ const EmployeeDetailScreen: React.FC<Props> = ({ navigation, route }) => {
           <GlassCard style={styles.infoCard}>
             <View style={styles.infoRow}>
               <Briefcase size={20} color="#8E8E93" />
-              <Text style={styles.infoText}>{employee.department || 'No Department Assigned'}</Text>
+              <Text style={styles.infoText}>{employee.department?.name || 'No Department Assigned'}</Text>
             </View>
             <View style={[styles.infoRow, styles.noBorder]}>
               <Calendar size={20} color="#8E8E93" />
@@ -110,19 +116,21 @@ const EmployeeDetailScreen: React.FC<Props> = ({ navigation, route }) => {
           </GlassCard>
         </View>
 
-        <View style={styles.actions}>
-          <AppleButton
-            title="Edit Employee"
-            onPress={() => navigation.navigate('EmployeeEdit', { id })}
-            variant="secondary"
-          />
-          <AppleButton
-            title="Delete Employee"
-            onPress={handleDelete}
-            variant="danger"
-            isLoading={deleting}
-          />
-        </View>
+        {currentUser?.role === 2 && (
+          <View style={styles.actions}>
+            <AppleButton
+              title="Edit Employee"
+              onPress={() => navigation.navigate('EmployeeEdit', { id })}
+              variant="secondary"
+            />
+            <AppleButton
+              title="Delete Employee"
+              onPress={handleDelete}
+              variant="danger"
+              isLoading={deleting}
+            />
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );

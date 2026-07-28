@@ -6,14 +6,19 @@ using EmployeeManagement.BUSINESS.BusinessModels.ResponseDTOs.CustomerResponseDt
 using EmployeeManagement.BUSINESS.BusinessModels.ResponseDTOs.TicketResponseDtos;
 using EmployeeManagement.BUSINESS.Interfaces.IService;
 using EmployeeManagement.DATA.Contexts;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using System.IO;
 
 public class CustomerService : ICustomerService
 {
     private readonly AppDbContext _context;
+    private readonly IWebHostEnvironment _env;
 
-    public CustomerService(AppDbContext context)
+    public CustomerService(AppDbContext context, IWebHostEnvironment env)
     {
         _context = context;
+        _env = env;
     }
 
     public async Task<CustomerResponseDto?> GetCustomerByIdAsync(Guid id)
@@ -146,5 +151,34 @@ public class CustomerService : ICustomerService
         _context.Customers.Remove(customer);
         await _context.SaveChangesAsync();
         return true;
+    }
+
+    public async Task<string?> UploadProfilePictureAsync(Guid id, IFormFile file)
+    {
+        var customer = await _context.Customers.FindAsync(id);
+
+        if (customer == null)
+            return null;
+
+        var uploadsFolder = Path.Combine(
+            _env.WebRootPath,
+            "uploads",
+            "profile-pictures");
+
+        Directory.CreateDirectory(uploadsFolder);
+
+        var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+        var filePath = Path.Combine(uploadsFolder, fileName);
+
+        using (var stream = new FileStream(filePath, FileMode.Create))
+        {
+            await file.CopyToAsync(stream);
+        }
+
+        customer.ProfilePicture = $"/uploads/profile-pictures/{fileName}";
+
+        await _context.SaveChangesAsync();
+
+        return customer.ProfilePicture;
     }
 }
