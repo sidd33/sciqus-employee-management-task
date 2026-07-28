@@ -62,13 +62,24 @@ namespace EmployeeManagement.BUSINESS.Implementations
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(_secretKey);
 
+            var claims = new List<Claim>
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, userId),
+                new Claim(JwtRegisteredClaimNames.Email, request.Email)
+            };
+
+            if (employee != null)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, employee.Role.ToString()));
+            }
+            else
+            {
+                claims.Add(new Claim(ClaimTypes.Role, "Customer"));
+            }
+
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity(new[]
-                {
-                    new Claim(JwtRegisteredClaimNames.Sub, userId),
-                    new Claim(JwtRegisteredClaimNames.Email, request.Email)
-                }),
+                Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.UtcNow.AddMinutes(15), // Access token lives for 15 minutes
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
@@ -104,16 +115,36 @@ namespace EmployeeManagement.BUSINESS.Implementations
                 return null;
             }
 
+            // Look up the user to get their role and email
+            var employee = await _context.Set<EmployeeManagement.DATA.DomainModels.EmployeeDATA.Employee>()
+                .FirstOrDefaultAsync(e => e.Id.ToString() == existingToken.UserId);
+
+            var customer = await _context.Set<EmployeeManagement.DATA.DomainModels.CustomerDATA.Customer>()
+                .FirstOrDefaultAsync(c => c.Id.ToString() == existingToken.UserId);
+
+            var claims = new List<Claim>
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, existingToken.UserId)
+            };
+
+            if (employee != null)
+            {
+                claims.Add(new Claim(JwtRegisteredClaimNames.Email, employee.Email));
+                claims.Add(new Claim(ClaimTypes.Role, employee.Role.ToString()));
+            }
+            else if (customer != null)
+            {
+                claims.Add(new Claim(JwtRegisteredClaimNames.Email, customer.Email));
+                claims.Add(new Claim(ClaimTypes.Role, "Customer"));
+            }
+
             // Generate a brand new access token for this user
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(_secretKey);
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity(new[]
-                {
-                    new Claim(JwtRegisteredClaimNames.Sub, existingToken.UserId)
-                }),
+                Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.UtcNow.AddMinutes(15),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
@@ -156,13 +187,16 @@ namespace EmployeeManagement.BUSINESS.Implementations
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(_secretKey);
 
+            var claims = new List<Claim>
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, customer.Id.ToString()),
+                new Claim(JwtRegisteredClaimNames.Email, customer.Email),
+                new Claim(ClaimTypes.Role, "Customer")
+            };
+
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity(new[]
-                {
-                    new Claim(JwtRegisteredClaimNames.Sub, customer.Id.ToString()),
-                    new Claim(JwtRegisteredClaimNames.Email, customer.Email)
-                }),
+                Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.UtcNow.AddMinutes(15), 
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };

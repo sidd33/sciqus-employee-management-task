@@ -2,6 +2,7 @@ namespace EmployeeManagement.WebAPI.Controllers;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using EmployeeManagement.BUSINESS.BusinessModels.RequestDTOs.TicketRequestDtos;
 using EmployeeManagement.BUSINESS.Interfaces.IService;
 using EmployeeManagement.BUSINESS.Validations.Authorization;
@@ -23,6 +24,14 @@ public class TicketsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateTicket([FromBody] CreateTicketDto dto)
     {
+        var currentUserId = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+        var currentUserRole = User.FindFirstValue(System.Security.Claims.ClaimTypes.Role);
+
+        if (currentUserRole != "Admin" && currentUserRole != "SuperAdmin" && currentUserId != dto.CustomerId.ToString())
+        {
+            return Forbid();
+        }
+
         try
         {
             var ticket = await _ticketService.CreateTicketAsync(dto);
@@ -47,6 +56,7 @@ public class TicketsController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Roles = "Admin,SuperAdmin,Employee")]
     public async Task<IActionResult> GetAllTickets([FromQuery] TicketQueryParameters query)
     {
         var tickets = await _ticketService.GetAllTicketsAsync(query);
@@ -67,6 +77,7 @@ public class TicketsController : ControllerBase
     }
 
     [HttpPatch("{id:guid}/assign")]
+    [Authorize(Roles = "Admin,SuperAdmin")]
     public async Task<IActionResult> AssignTicket(Guid id, [FromBody] AssignTicketDto dto)
     {
         try

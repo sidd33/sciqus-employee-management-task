@@ -106,6 +106,8 @@ public class TicketService : ITicketService
             ticketsQuery = ticketsQuery.Where(t => t.DepartmentId == query.DepartmentId.Value);
         if (query.CustomerId.HasValue)
             ticketsQuery = ticketsQuery.Where(t => t.CustomerId == query.CustomerId.Value);
+        if (query.AssignedEmployeeId.HasValue)
+            ticketsQuery = ticketsQuery.Where(t => t.AssignedEmployeeId == query.AssignedEmployeeId.Value);
         if (!string.IsNullOrWhiteSpace(query.SearchTerm))
             ticketsQuery = ticketsQuery.Where(t => t.Title.Contains(query.SearchTerm) || t.Description.Contains(query.SearchTerm));
 

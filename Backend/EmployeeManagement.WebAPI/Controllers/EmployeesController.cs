@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 
 using EmployeeManagement.BUSINESS.BusinessModels.RequestDTOs.EmployeeRequestDtos;
@@ -6,12 +6,14 @@ using EmployeeManagement.BUSINESS.Interfaces.IService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
 
 namespace EmployeeManagement.WebAPI.Controllers
 {
 	[ApiController]
 	[Route("api/[controller]")]
-	//[Authorize]
+	[Authorize]
 	public class EmployeesController : ControllerBase
 	{
 		private readonly IEmployeeService _employeeService;
@@ -24,7 +26,7 @@ namespace EmployeeManagement.WebAPI.Controllers
 		// GET: api/employees
 		// Admin only — full listing/search of all employees.
 		[HttpGet]
-		//[Authorize(Roles = "Admin")]
+		[Authorize(Roles = "Admin,SuperAdmin")]
 		[ProducesResponseType(StatusCodes.Status200OK)]
 		public async Task<IActionResult> GetAll([FromQuery] EmployeeQueryParameters query)
 		{
@@ -52,7 +54,7 @@ namespace EmployeeManagement.WebAPI.Controllers
 		// POST: api/employees
 		// Admin only — hiring/creating employees.
 		[HttpPost]
-		//[Authorize(Roles = "Admin")]
+		[Authorize(Roles = "Admin,SuperAdmin")]
 		[ProducesResponseType(StatusCodes.Status201Created)]
 		[ProducesResponseType(StatusCodes.Status409Conflict)]
 		public async Task<IActionResult> Create([FromBody] CreateEmployeeDto dto)
@@ -78,6 +80,14 @@ namespace EmployeeManagement.WebAPI.Controllers
 		[ProducesResponseType(StatusCodes.Status409Conflict)]
 		public async Task<IActionResult> Update(Guid id, [FromBody] UpdateEmployeeDto dto)
 		{
+			var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+			var currentUserRole = User.FindFirstValue(ClaimTypes.Role);
+
+			if (currentUserRole != "Admin" && currentUserRole != "SuperAdmin" && currentUserId != id.ToString())
+			{
+				return Forbid();
+			}
+
 			try
 			{
 				var updated = await _employeeService.UpdateAsync(id, dto);
@@ -96,7 +106,7 @@ namespace EmployeeManagement.WebAPI.Controllers
 		// PUT: api/employees/{id}/department
 		// Admin only — reassigning an employee's department.
 		[HttpPut("{id:guid}/department")]
-		//[Authorize(Roles = "Admin")]
+		[Authorize(Roles = "Admin,SuperAdmin")]
 		[ProducesResponseType(StatusCodes.Status200OK)]
 		[ProducesResponseType(StatusCodes.Status404NotFound)]
 		[ProducesResponseType(StatusCodes.Status409Conflict)]
@@ -117,10 +127,35 @@ namespace EmployeeManagement.WebAPI.Controllers
 			}
 		}
 
+		// PUT: api/employees/{id}/role
+		// Admin, SuperAdmin only.
+		[HttpPut("{id:guid}/role")]
+		[Authorize(Roles = "Admin,SuperAdmin")]
+		[ProducesResponseType(StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status404NotFound)]
+		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+		public async Task<IActionResult> UpdateRole(Guid id, [FromBody] UpdateEmployeeRoleDto dto)
+		{
+			try
+			{
+				var currentUserRole = User.FindFirstValue(ClaimTypes.Role) ?? "";
+				var updated = await _employeeService.UpdateRoleAsync(id, dto, currentUserRole);
+
+				if (updated == null)
+					return NotFound();
+
+				return Ok(updated);
+			}
+			catch (UnauthorizedAccessException ex)
+			{
+				return Unauthorized(new { message = ex.Message });
+			}
+		}
+
 		// DELETE: api/employees/{id}
 		// Admin only — soft delete.
 		[HttpDelete("{id:guid}")]
-		//[Authorize(Roles = "Admin")]
+		[Authorize(Roles = "Admin,SuperAdmin")]
 		[ProducesResponseType(StatusCodes.Status204NoContent)]
 		[ProducesResponseType(StatusCodes.Status404NotFound)]
 		public async Task<IActionResult> Delete(Guid id)
@@ -146,6 +181,14 @@ namespace EmployeeManagement.WebAPI.Controllers
 	Guid id,
 	[FromForm] UploadProfilePictureDto request)
 		{
+			var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+			var currentUserRole = User.FindFirstValue(ClaimTypes.Role);
+
+			if (currentUserRole != "Admin" && currentUserRole != "SuperAdmin" && currentUserId != id.ToString())
+			{
+				return Forbid();
+			}
+
 			if (request.File == null || request.File.Length == 0)
 				return BadRequest(new { message = "No file uploaded." });
 
