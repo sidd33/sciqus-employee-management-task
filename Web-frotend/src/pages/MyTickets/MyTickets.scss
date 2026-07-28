@@ -1,0 +1,85 @@
+@use "../../styles/variables" as *;
+
+.my-tickets-page {
+  display: flex;
+  flex-direction: column;
+  gap: $stack-lg;
+}
+
+.my-tickets-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: $stack-md;
+
+  h1 {
+    font: $type-headline-lg;
+    letter-spacing: $type-headline-lg-letter-spacing;
+    margin: 0;
+  }
+}
+
+.my-tickets-subtitle {
+  font: $type-body-md;
+  color: $color-on-surface-variant;
+  margin: 4px 0 0;
+}
+
+.my-tickets-error {
+  background: $color-error-container;
+  color: $color-on-error-container;
+  border-radius: $radius-default;
+  padding: $stack-sm $stack-md;
+  font: $type-body-md;
+}
+
+.my-tickets-loading {
+  padding: 48px;
+  text-align: center;
+  color: $color-on-surface-variant;
+  font: $type-body-md;
+}
+
+.my-tickets-list {
+  display: flex;
+  flex-direction: column;
+  gap: $stack-md;
+}
+
+.my-ticket-card {
+  display: flex;
+  flex-direction: column;
+  gap: $stack-sm;
+}
+
+.my-ticket-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $stack-sm;
+
+  h3 {
+    font: $type-headline-sm;
+    margin: 0;
+  }
+}
+
+.my-ticket-description {
+  font: $type-body-md;
+  color: $color-on-surface-variant;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.my-ticket-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font: $type-body-sm;
+  color: $color-on-surface-variant;
+}
