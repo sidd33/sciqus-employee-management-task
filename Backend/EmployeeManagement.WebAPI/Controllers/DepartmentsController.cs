@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 
 using EmployeeManagement.BUSINESS.BusinessModels.RequestDTOs.DepartmentRequestDtos;
@@ -13,7 +13,7 @@ namespace EmployeeManagement.WebAPI.Controllers
 	// Authentication required for all actions.
 	// Admin-only restriction applied per-action below, not controller-wide,
 	// since employees should be able to view departments.
-	//[Authorize]
+	[Authorize]
 	public class DepartmentsController : ControllerBase
 	{
 		private readonly IDepartmentService _departmentService;
@@ -50,7 +50,7 @@ namespace EmployeeManagement.WebAPI.Controllers
 		// POST: api/departments
 		// Admin only (BR-001).
 		[HttpPost]
-		//[Authorize(Roles = "Admin")]
+		[Authorize(Roles = "Admin,SuperAdmin")]
 		[ProducesResponseType(StatusCodes.Status201Created)]
 		[ProducesResponseType(StatusCodes.Status409Conflict)]
 		public async Task<IActionResult> Create([FromBody] CreateDepartmentDto dto)
@@ -69,7 +69,7 @@ namespace EmployeeManagement.WebAPI.Controllers
 		// PUT: api/departments/{id}
 		// Admin only (BR-001).
 		[HttpPut("{id:guid}")]
-		//[Authorize(Roles = "Admin")]
+		[Authorize(Roles = "Admin,SuperAdmin")]
 		[ProducesResponseType(StatusCodes.Status200OK)]
 		[ProducesResponseType(StatusCodes.Status404NotFound)]
 		[ProducesResponseType(StatusCodes.Status409Conflict)]

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using EmployeeManagement.BUSINESS.Interfaces;
 using EmployeeManagement.BUSINESS.BusinessModels.RequestDTOs.AuthRequestDTOs;
+using Microsoft.AspNetCore.Authorization;
 
 namespace EmployeeManagement.WebAPI.Controllers
 {
@@ -56,6 +57,7 @@ namespace EmployeeManagement.WebAPI.Controllers
         }
 
         [HttpPost("logout")]
+        [Authorize]
         public async Task<IActionResult> Logout([FromBody] RefreshRequestDto request)
         {
             var result = await _tokenService.RevokeTokenAsync(request.RefreshToken);

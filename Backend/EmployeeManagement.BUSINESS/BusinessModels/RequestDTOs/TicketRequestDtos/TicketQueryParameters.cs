@@ -7,6 +7,7 @@ public class TicketQueryParameters
     public TicketStatus? Status { get; set; }
     public Guid? DepartmentId { get; set; }
     public Guid? CustomerId { get; set; }
+    public Guid? AssignedEmployeeId { get; set; }
     public string? SearchTerm { get; set; }
 
     public string SortBy { get; set; } = "CreatedAt";
