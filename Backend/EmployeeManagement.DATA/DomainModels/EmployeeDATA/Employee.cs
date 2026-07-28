@@ -1,12 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using EmployeeManagement.DATA.DomainModels.DepartmentDATA;
-using EmployeeManagement.DATA.DomainModels.EmployeeDATA;
-
-
 
 namespace EmployeeManagement.DATA.DomainModels.EmployeeDATA
 {
@@ -36,10 +30,22 @@ namespace EmployeeManagement.DATA.DomainModels.EmployeeDATA
 
 		public bool IsDeleted { get; set; } = false;
 
+
 		// Foreign key
 		public Guid DepartmentId { get; set; }
 
+
 		// Navigation property
 		public Department Department { get; set; } = null!;
+
+
+		// Auth/Ticket relationship
+		public ICollection<TicketDATA.Ticket> AssignedTickets { get; set; }
+			= new List<TicketDATA.Ticket>();
+
+
+		// Round-robin ticket assignment tracking
+		// Null means employee has never received a ticket
+		public DateTime? LastAssignedTicketAt { get; set; }
 	}
 }

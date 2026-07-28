@@ -5,6 +5,6 @@ namespace EmployeeManagement.DATA.Interfaces.IRepositories
 {
     public interface IAuthRepository : IGenericRepository<RefreshToken>
     {
-        Task<RefreshToken> GetByTokenAsync(string token);
+        Task<RefreshToken?> GetByTokenAsync(string token);
     }
 }
