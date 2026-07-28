@@ -1,6 +1,8 @@
 using EmployeeManagement.DATA.Interfaces.IRepositories;
 using EmployeeManagement.DATA.Implementations.Repositories;
 using EmployeeManagement.DATA.Contexts;
+using EmployeeManagement.BUSINESS.Interfaces.IService;
+using EmployeeManagement.BUSINESS.Implementations.Service;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +11,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseInMemoryDatabase("EmployeeManagementDb"));
 
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
+
+builder.Services.AddScoped<ITicketService, TicketService>();
+builder.Services.AddScoped<ICustomerService, CustomerService>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

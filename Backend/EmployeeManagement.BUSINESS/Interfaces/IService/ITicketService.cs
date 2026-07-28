@@ -9,5 +9,5 @@ public interface ITicketService
     Task<Ticket> CreateTicketAsync(CreateTicketDto dto);
     Task<TicketResponseDto?> GetTicketByIdAsync(Guid id);
     Task<IEnumerable<TicketResponseDto>> GetAllTicketsAsync();
-    Task<Ticket?> UpdateTicketAsync(Ticket ticket);
+    Task<TicketResponseDto?> UpdateTicketAsync(Guid id, UpdateTicketDto dto);
 }

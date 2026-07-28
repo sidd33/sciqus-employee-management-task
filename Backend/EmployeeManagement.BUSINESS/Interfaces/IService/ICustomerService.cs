@@ -1,11 +1,12 @@
 namespace EmployeeManagement.BUSINESS.Interfaces.IService;
 
-using EmployeeManagement.DATA.DomainModels.CustomerDATA;
+using EmployeeManagement.BUSINESS.BusinessModels.RequestDTOs.CustomerRequestDtos;
+using EmployeeManagement.BUSINESS.BusinessModels.ResponseDTOs.CustomerResponseDtos;
 
 public interface ICustomerService
 {
-    Task<Customer?> GetCustomerByIdAsync(Guid id);
-    Task<IEnumerable<Customer>> GetAllCustomersAsync();
-    Task<Customer?> UpdateCustomerAsync(Customer customer);
+    Task<CustomerResponseDto?> GetCustomerByIdAsync(Guid id);
+    Task<IEnumerable<CustomerResponseDto>> GetAllCustomersAsync();
+    Task<CustomerResponseDto?> UpdateCustomerAsync(Guid id, UpdateCustomerDto dto);
     Task<bool> DeleteCustomerAsync(Guid id);
 }

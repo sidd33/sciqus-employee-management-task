@@ -83,8 +83,36 @@ public class TicketService : ITicketService
         });
     }
 
-    public async Task<Ticket?> UpdateTicketAsync(Ticket ticket)
+    public async Task<TicketResponseDto?> UpdateTicketAsync(Guid id, UpdateTicketDto dto)
     {
-        return null;
+        var ticket = await _context.Tickets
+            .Include(t => t.Customer)
+            .FirstOrDefaultAsync(t => t.Id == id);
+
+        if (ticket == null) return null;
+
+        if (!string.IsNullOrWhiteSpace(dto.Title)) ticket.Title = dto.Title;
+        if (!string.IsNullOrWhiteSpace(dto.Description)) ticket.Description = dto.Description;
+        if (dto.Status.HasValue) ticket.Status = dto.Status.Value;
+        if (dto.DepartmentId.HasValue) ticket.DepartmentId = dto.DepartmentId.Value;
+        ticket.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return new TicketResponseDto
+        {
+            Id = ticket.Id,
+            Title = ticket.Title,
+            Description = ticket.Description,
+            Status = ticket.Status.ToString(),
+            CustomerId = ticket.CustomerId,
+            CustomerName = ticket.Customer?.Name ?? string.Empty,
+            CustomerEmail = ticket.Customer?.Email ?? string.Empty,
+            AssignedEmployeeId = ticket.AssignedEmployeeId,
+            DepartmentId = ticket.DepartmentId,
+            CreatedAt = ticket.CreatedAt,
+            SlaStartTime = ticket.SlaStartTime,
+            IsSlaBreached = ticket.IsSlaBreached
+        };
     }
 }
