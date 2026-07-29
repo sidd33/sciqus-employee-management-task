@@ -30,8 +30,6 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     // Android elevation
     elevation: 5,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.5)',
   },
 });
 

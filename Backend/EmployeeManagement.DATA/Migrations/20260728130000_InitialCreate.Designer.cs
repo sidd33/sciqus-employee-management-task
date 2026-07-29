@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EmployeeManagement.DATA.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260728080620_InitialMySql")]
-    partial class InitialMySql
+    [Migration("20260728130000_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

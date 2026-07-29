@@ -90,18 +90,26 @@ namespace EmployeeManagement.DATA.Seed
 
 			var departments = await context.Departments.ToListAsync();
 
-			int counter = 1;
+			var indianNames = new[] {
+				("Aarav", "Sharma"), ("Vivaan", "Patel"), ("Aditya", "Singh"), ("Diya", "Kumar"),
+				("Ananya", "Reddy"), ("Kavya", "Desai"), ("Rohan", "Mehta"), ("Neha", "Joshi")
+			};
+
+			int nameIndex = 0;
 
 			foreach (var department in departments)
 			{
 				for (int i = 1; i <= 2; i++)
 				{
+					if (nameIndex >= indianNames.Length) break;
+					var (firstName, lastName) = indianNames[nameIndex];
+					
 					var employee = new Employee
 					{
 						Id = Guid.NewGuid(),
-						FirstName = $"Employee{counter}",
-						LastName = department.Name.Replace(" ", ""),
-						Email = $"employee{counter}@company.com",
+						FirstName = firstName,
+						LastName = lastName,
+						Email = $"{firstName.ToLower()}.{lastName.ToLower()}@company.com",
 						PasswordHash = BCrypt.Net.BCrypt.HashPassword("Employee@123"),
 						JoinedAt = DateTime.UtcNow,
 						Role = EmployeeRole.Employee,
@@ -113,7 +121,7 @@ namespace EmployeeManagement.DATA.Seed
 					};
 
 					await context.Employees.AddAsync(employee);
-					counter++;
+					nameIndex++;
 				}
 			}
 
@@ -126,16 +134,16 @@ namespace EmployeeManagement.DATA.Seed
 
 			var customers = new[]
 			{
-				new DomainModels.CustomerDATA.Customer { Id = Guid.NewGuid(), Name = "Alice Johnson", Email = "alice.johnson@example.com", Password = BCrypt.Net.BCrypt.HashPassword("Customer@123") },
-				new DomainModels.CustomerDATA.Customer { Id = Guid.NewGuid(), Name = "Bob Smith", Email = "bob.smith@example.com", Password = BCrypt.Net.BCrypt.HashPassword("Customer@123") },
-				new DomainModels.CustomerDATA.Customer { Id = Guid.NewGuid(), Name = "Charlie Davis", Email = "charlie.davis@example.com", Password = BCrypt.Net.BCrypt.HashPassword("Customer@123") },
-				new DomainModels.CustomerDATA.Customer { Id = Guid.NewGuid(), Name = "Diana Prince", Email = "diana.prince@example.com", Password = BCrypt.Net.BCrypt.HashPassword("Customer@123") },
-				new DomainModels.CustomerDATA.Customer { Id = Guid.NewGuid(), Name = "Ethan Hunt", Email = "ethan.hunt@example.com", Password = BCrypt.Net.BCrypt.HashPassword("Customer@123") },
-				new DomainModels.CustomerDATA.Customer { Id = Guid.NewGuid(), Name = "Fiona Gallagher", Email = "fiona.gallagher@example.com", Password = BCrypt.Net.BCrypt.HashPassword("Customer@123") },
-				new DomainModels.CustomerDATA.Customer { Id = Guid.NewGuid(), Name = "George Clark", Email = "george.clark@example.com", Password = BCrypt.Net.BCrypt.HashPassword("Customer@123") },
-				new DomainModels.CustomerDATA.Customer { Id = Guid.NewGuid(), Name = "Hannah Abbott", Email = "hannah.abbott@example.com", Password = BCrypt.Net.BCrypt.HashPassword("Customer@123") },
-				new DomainModels.CustomerDATA.Customer { Id = Guid.NewGuid(), Name = "Ian Malcolm", Email = "ian.malcolm@example.com", Password = BCrypt.Net.BCrypt.HashPassword("Customer@123") },
-				new DomainModels.CustomerDATA.Customer { Id = Guid.NewGuid(), Name = "Julia Roberts", Email = "julia.roberts@example.com", Password = BCrypt.Net.BCrypt.HashPassword("Customer@123") }
+				new DomainModels.CustomerDATA.Customer { Id = Guid.NewGuid(), Name = "Rahul Verma", Email = "rahul.verma@example.com", Password = BCrypt.Net.BCrypt.HashPassword("Customer@123") },
+				new DomainModels.CustomerDATA.Customer { Id = Guid.NewGuid(), Name = "Priya Kapoor", Email = "priya.kapoor@example.com", Password = BCrypt.Net.BCrypt.HashPassword("Customer@123") },
+				new DomainModels.CustomerDATA.Customer { Id = Guid.NewGuid(), Name = "Amitabh Bose", Email = "amitabh.bose@example.com", Password = BCrypt.Net.BCrypt.HashPassword("Customer@123") },
+				new DomainModels.CustomerDATA.Customer { Id = Guid.NewGuid(), Name = "Sneha Iyer", Email = "sneha.iyer@example.com", Password = BCrypt.Net.BCrypt.HashPassword("Customer@123") },
+				new DomainModels.CustomerDATA.Customer { Id = Guid.NewGuid(), Name = "Vikram Chauhan", Email = "vikram.chauhan@example.com", Password = BCrypt.Net.BCrypt.HashPassword("Customer@123") },
+				new DomainModels.CustomerDATA.Customer { Id = Guid.NewGuid(), Name = "Pooja Nair", Email = "pooja.nair@example.com", Password = BCrypt.Net.BCrypt.HashPassword("Customer@123") },
+				new DomainModels.CustomerDATA.Customer { Id = Guid.NewGuid(), Name = "Sanjay Gupta", Email = "sanjay.gupta@example.com", Password = BCrypt.Net.BCrypt.HashPassword("Customer@123") },
+				new DomainModels.CustomerDATA.Customer { Id = Guid.NewGuid(), Name = "Kiran Rao", Email = "kiran.rao@example.com", Password = BCrypt.Net.BCrypt.HashPassword("Customer@123") },
+				new DomainModels.CustomerDATA.Customer { Id = Guid.NewGuid(), Name = "Rajesh Khanna", Email = "rajesh.khanna@example.com", Password = BCrypt.Net.BCrypt.HashPassword("Customer@123") },
+				new DomainModels.CustomerDATA.Customer { Id = Guid.NewGuid(), Name = "Meera Rajput", Email = "meera.rajput@example.com", Password = BCrypt.Net.BCrypt.HashPassword("Customer@123") }
 			};
 
 			await context.Customers.AddRangeAsync(customers);

@@ -25,6 +25,21 @@ public class TicketsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateTicket([FromBody] CreateTicketDto dto)
     {
+        var currentUserId = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+        var currentUserRole = User.FindFirstValue(System.Security.Claims.ClaimTypes.Role);
+
+        if (currentUserRole == "Customer")
+        {
+            if (Guid.TryParse(currentUserId, out var customerId))
+            {
+                dto.CustomerId = customerId;
+            }
+        }
+        else if (currentUserRole != "Admin" && currentUserRole != "SuperAdmin" && currentUserId != dto.CustomerId.ToString())
+        {
+            return Forbid();
+        }
+
         try
         {
             var ticket = await _ticketService.CreateTicketAsync(dto);
@@ -49,9 +64,19 @@ public class TicketsController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize(Roles = "Admin,SuperAdmin,Employee")]
+    [Authorize]
     public async Task<IActionResult> GetAllTickets([FromQuery] TicketQueryParameters query)
     {
+        var currentUserId = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+        var currentUserRole = User.FindFirstValue(System.Security.Claims.ClaimTypes.Role);
+
+        if (currentUserRole == "Customer")
+        {
+            if (Guid.TryParse(currentUserId, out var customerId))
+            {
+                query.CustomerId = customerId;
+            }
+        }
         var tickets = await _ticketService.GetAllTicketsAsync(query);
         return Ok(tickets);
     }
@@ -100,5 +125,14 @@ public class TicketsController : ControllerBase
         {
             return BadRequest(new { message = ex.Message });
         }
+    }
+
+    [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Admin,SuperAdmin")]
+    public async Task<IActionResult> DeleteTicket(Guid id)
+    {
+        var success = await _ticketService.DeleteTicketAsync(id);
+        if (!success) return NotFound();
+        return NoContent();
     }
 }
