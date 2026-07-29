@@ -6,6 +6,7 @@ using System.Security.Claims;
 using EmployeeManagement.BUSINESS.BusinessModels.RequestDTOs.TicketRequestDtos;
 using EmployeeManagement.BUSINESS.Interfaces.IService;
 using EmployeeManagement.BUSINESS.Validations.Authorization;
+using EmployeeManagement.DATA.DomainModels.TicketDATA;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -24,14 +25,6 @@ public class TicketsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateTicket([FromBody] CreateTicketDto dto)
     {
-        var currentUserId = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
-        var currentUserRole = User.FindFirstValue(System.Security.Claims.ClaimTypes.Role);
-
-        if (currentUserRole != "Admin" && currentUserRole != "SuperAdmin" && currentUserId != dto.CustomerId.ToString())
-        {
-            return Forbid();
-        }
-
         try
         {
             var ticket = await _ticketService.CreateTicketAsync(dto);
@@ -71,6 +64,23 @@ public class TicketsController : ControllerBase
 
         var authResult = await _authorizationService.AuthorizeAsync(User, existingTicket, new TicketOwnerOrAdminRequirement());
         if (!authResult.Succeeded) return Forbid();
+
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var isAdmin = User.IsInRole("Admin") || User.IsInRole("SuperAdmin");
+        var isOwner = userId != null && existingTicket.CustomerId.ToString() == userId;
+        var isAssignedEmployee = userId != null && existingTicket.AssignedEmployeeId?.ToString() == userId;
+
+       
+        if (isAssignedEmployee && !isAdmin && !isOwner)
+        {
+            if (!string.IsNullOrWhiteSpace(dto.Title) || 
+                !string.IsNullOrWhiteSpace(dto.Description) || 
+                dto.DepartmentId.HasValue || 
+                dto.Status != TicketStatus.Completed || dto.Status != TicketStatus.InProgress)
+            {
+                return BadRequest(new { message = "Assigned employees are only permitted to update the ticket status to 'Completed'." });
+            }
+        }
 
         var updatedTicket = await _ticketService.UpdateTicketAsync(id, dto);
         return Ok(updatedTicket);

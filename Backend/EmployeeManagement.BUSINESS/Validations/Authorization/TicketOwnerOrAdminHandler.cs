@@ -12,9 +12,11 @@ public class TicketOwnerOrAdminHandler : AuthorizationHandler<TicketOwnerOrAdmin
         TicketResponseDto resource)
     {
         var userId = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var isAdmin = context.User.IsInRole("Admin");
+        var isAdmin = context.User.IsInRole("Admin") || context.User.IsInRole("SuperAdmin");
+        var isOwner = userId != null && resource.CustomerId.ToString() == userId;
+        var isAssignedEmployee = userId != null && resource.AssignedEmployeeId?.ToString() == userId;
 
-        if (isAdmin || (userId != null && resource.CustomerId.ToString() == userId))
+        if (isAdmin || isOwner || isAssignedEmployee)
         {
             context.Succeed(requirement);
         }
